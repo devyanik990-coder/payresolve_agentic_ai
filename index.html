@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PayResolve AI — Payment Operations Platform</title>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --bg-elev: #11141b;
+    --bg-elev-2: #161a23;
+    --panel: #12151d;
+    --border: #20252f;
+    --border-soft: #1a1e27;
+    --text: #e6e9ef;
+    --text-mut: #99a1b0;
+    --text-dim: #6b7280;
+    --accent: #6366f1;
+    --accent-soft: rgba(99, 102, 241, 0.14);
+    --accent-2: #635bff;
+    --green: #2bb673;
+    --green-soft: rgba(43, 182, 115, 0.14);
+    --amber: #e0a82e;
+    --amber-soft: rgba(224, 168, 46, 0.14);
+    --red: #e5484d;
+    --red-soft: rgba(229, 72, 77, 0.14);
+    --blue: #4c8dff;
+    --blue-soft: rgba(76, 141, 255, 0.14);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.22);
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+    --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+  }
+  ::selection { background: var(--accent-soft); }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: #232834; border-radius: 8px; border: 2px solid var(--bg); }
+  ::-webkit-scrollbar-thumb:hover { background: #2e3442; }
+
+  .app { display: grid; grid-template-columns: 244px 1fr; min-height: 100vh; }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar {
+    background: var(--bg-elev);
+    border-right: 1px solid var(--border-soft);
+    display: flex;
+    flex-direction: column;
+    padding: 18px 14px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+  .brand { display: flex; align-items: center; gap: 11px; padding: 6px 8px 20px; }
+  .brand-mark {
+    width: 32px; height: 32px; border-radius: 9px;
+    background: linear-gradient(150deg, #635bff, #4c3fd6);
+    display: grid; place-items: center; flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(99,91,255,0.35);
+  }
+  .brand-mark svg { width: 18px; height: 18px; }
+  .brand-name { font-weight: 650; font-size: 15px; letter-spacing: -0.02em; }
+  .brand-sub { font-size: 11px; color: var(--text-dim); letter-spacing: 0.01em; }
+
+  .nav-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-dim); padding: 10px 10px 8px; font-weight: 600; }
+  .nav-item {
+    display: flex; align-items: center; gap: 11px;
+    padding: 9px 10px; border-radius: var(--radius-sm);
+    color: var(--text-mut); cursor: pointer; font-weight: 500;
+    transition: background .15s ease, color .15s ease;
+    user-select: none; position: relative;
+  }
+  .nav-item svg { width: 17px; height: 17px; flex-shrink: 0; opacity: .85; }
+  .nav-item:hover { background: var(--bg-elev-2); color: var(--text); }
+  .nav-item.active { background: var(--accent-soft); color: #c7c9ff; }
+  .nav-item.active svg { opacity: 1; }
+  .nav-badge { margin-left: auto; font-size: 11px; background: var(--red-soft); color: #ff8a8d; padding: 1px 7px; border-radius: 20px; font-weight: 600; }
+
+  .sidebar-foot { margin-top: auto; padding-top: 14px; border-top: 1px solid var(--border-soft); }
+  .user-chip { display: flex; align-items: center; gap: 10px; padding: 8px 8px; border-radius: var(--radius-sm); cursor: pointer; transition: background .15s; }
+  .user-chip:hover { background: var(--bg-elev-2); }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(140deg,#3b4252,#2a2f3a); display: grid; place-items: center; font-size: 12px; font-weight: 600; color: #cdd2db; }
+  .user-meta { line-height: 1.25; }
+  .user-meta .nm { font-size: 13px; font-weight: 550; }
+  .user-meta .rl { font-size: 11px; color: var(--text-dim); }
+
+  /* ---------- Main ---------- */
+  .main { display: flex; flex-direction: column; min-width: 0; }
+  .topbar {
+    height: 58px; border-bottom: 1px solid var(--border-soft);
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 28px; background: rgba(11,13,18,0.7); backdrop-filter: blur(8px);
+    position: sticky; top: 0; z-index: 20;
+  }
+  .crumbs { font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 8px; }
+  .crumbs b { color: var(--text); font-weight: 550; }
+  .crumbs .sep { opacity: .5; }
+  .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .search {
+    display: flex; align-items: center; gap: 8px; background: var(--bg-elev);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 7px 11px; width: 260px; color: var(--text-dim);
+  }
+  .search input { background: none; border: none; outline: none; color: var(--text); font-size: 13px; width: 100%; }
+  .search input::placeholder { color: var(--text-dim); }
+  .kbd { font-size: 11px; border: 1px solid var(--border); border-radius: 5px; padding: 1px 5px; color: var(--text-dim); font-family: var(--mono); }
+  .icon-btn { width: 34px; height: 34px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-elev); display: grid; place-items: center; cursor: pointer; color: var(--text-mut); transition: .15s; }
+  .icon-btn:hover { color: var(--text); border-color: #2c3340; }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  .content { padding: 28px; max-width: 1400px; width: 100%; margin: 0 auto; }
+
+  .screen { display: none; animation: fade .25s ease; }
+  .screen.active { display: block; }
+  @keyframes fade { from { opacity: 0; transform: translateY(4px);} to { opacity:1; transform: none; } }
+
+  .page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 22px; }
+  .page-title { font-size: 22px; font-weight: 650; letter-spacing: -0.025em; }
+  .page-desc { color: var(--text-mut); font-size: 13.5px; margin-top: 3px; }
+  .head-actions { display: flex; gap: 10px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 14px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 550;
+    border: 1px solid var(--border); background: var(--bg-elev); color: var(--text);
+    cursor: pointer; transition: .15s; white-space: nowrap;
+  }
+  .btn:hover { border-color: #2f3645; background: var(--bg-elev-2); }
+  .btn svg { width: 15px; height: 15px; }
+  .btn.primary { background: var(--accent-2); border-color: var(--accent-2); color: #fff; }
+  .btn.primary:hover { background: #5249f0; border-color: #5249f0; }
+  .btn.ghost { background: transparent; }
+
+  /* ---------- Stat cards ---------- */
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat {
+    background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius);
+    padding: 16px 16px 15px; box-shadow: var(--shadow); transition: border-color .15s, transform .15s;
+  }
+  .stat:hover { border-color: var(--border); transform: translateY(-1px); }
+  .stat-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .stat-label { font-size: 12.5px; color: var(--text-mut); font-weight: 500; }
+  .stat-ico { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; }
+  .stat-ico svg { width: 15px; height: 15px; }
+  .stat-val { font-size: 25px; font-weight: 650; letter-spacing: -0.03em; line-height: 1.1; }
+  .stat-delta { font-size: 12px; margin-top: 7px; display: flex; align-items: center; gap: 5px; color: var(--text-dim); }
+  .delta-up { color: var(--green); } .delta-down { color: var(--red); } .delta-warn { color: var(--amber); }
+
+  /* ---------- Card / table ---------- */
+  .card { background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px; border-bottom: 1px solid var(--border-soft); }
+  .card-title { font-size: 14.5px; font-weight: 600; }
+  .card-title .muted { color: var(--text-dim); font-weight: 400; margin-left: 8px; font-size: 13px; }
+  .filters { display: flex; gap: 8px; }
+  .chip { font-size: 12.5px; padding: 5px 11px; border-radius: 20px; border: 1px solid var(--border); color: var(--text-mut); cursor: pointer; transition: .15s; background: transparent; }
+  .chip:hover { color: var(--text); border-color: #2f3645; }
+  .chip.active { background: var(--bg-elev-2); color: var(--text); border-color: #2f3645; }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-dim); font-weight: 600; padding: 11px 18px; background: var(--bg-elev);
+    border-bottom: 1px solid var(--border-soft);
+  }
+  thead th.right, td.right { text-align: right; }
+  tbody td { padding: 13px 18px; border-bottom: 1px solid var(--border-soft); font-size: 13.5px; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .12s; }
+  tbody tr:hover { background: rgba(255,255,255,0.018); }
+  .case-id { font-family: var(--mono); font-size: 12.5px; color: var(--text-mut); }
+  .merchant-cell { display: flex; align-items: center; gap: 10px; }
+  .merchant-logo { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .merchant-name { font-weight: 550; }
+  .merchant-sub { font-size: 11.5px; color: var(--text-dim); }
+  .gateway-tag { font-family: var(--mono); font-size: 12px; color: var(--text-mut); }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 550; padding: 3px 9px; border-radius: 20px; white-space: nowrap; }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .b-red { background: var(--red-soft); color: #ff8a8d; } .b-red .dot { background: var(--red); }
+  .b-amber { background: var(--amber-soft); color: #f0c462; } .b-amber .dot { background: var(--amber); }
+  .b-green { background: var(--green-soft); color: #4dd699; } .b-green .dot { background: var(--green); }
+  .b-blue { background: var(--blue-soft); color: #7eaeff; } .b-blue .dot { background: var(--blue); }
+  .b-gray { background: rgba(255,255,255,0.05); color: var(--text-mut); } .b-gray .dot { background: var(--text-dim); }
+  .b-violet { background: var(--accent-soft); color: #b4b6ff; } .b-violet .dot { background: var(--accent); }
+
+  .risk-val { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .link-btn { font-size: 12.5px; font-weight: 550; color: #9a9bff; background: var(--accent-soft); border: 1px solid transparent; padding: 5px 11px; border-radius: var(--radius-sm); cursor: pointer; transition: .15s; white-space: nowrap; }
+  .link-btn:hover { background: rgba(99,102,241,0.22); }
+
+  /* ---------- Screen 2 — Ops center ---------- */
+  .ops-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr 320px;
+    grid-template-rows: minmax(360px, 1fr) 260px;
+    grid-template-areas:
+      "summary center decision"
+      "summary conversation recommend";
+    gap: 16px;
+    height: calc(100vh - 58px - 56px - 70px);
+    min-height: 640px;
+  }
+  .ops-panel { background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius); box-shadow: var(--shadow); display: flex; flex-direction: column; overflow: hidden; }
+  .ops-panel-head { padding: 13px 16px; border-bottom: 1px solid var(--border-soft); display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+  .ops-panel-head .ico { width: 26px; height: 26px; border-radius: 7px; display: grid; place-items: center; background: var(--bg-elev-2); }
+  .ops-panel-head .ico svg { width: 14px; height: 14px; color: var(--text-mut); }
+  .ops-panel-head h3 { font-size: 13.5px; font-weight: 600; }
+  .ops-panel-head .sub { font-size: 11px; color: var(--text-dim); }
+  .ops-panel-body { padding: 16px; overflow: auto; flex: 1; }
+
+  .area-summary { grid-area: summary; }
+  .area-center { grid-area: center; }
+  .area-decision { grid-area: decision; }
+  .area-conversation { grid-area: conversation; }
+  .area-recommend { grid-area: recommend; }
+
+  .summary-row { display: flex; flex-direction: column; gap: 3px; padding: 11px 0; border-bottom: 1px solid var(--border-soft); }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .k { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; }
+  .summary-row .v { font-size: 14px; font-weight: 550; display: flex; align-items: center; gap: 9px; }
+
+  .placeholder {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 30px; gap: 14px; color: var(--text-dim);
+    border: 1.5px dashed var(--border); border-radius: var(--radius); margin: 16px;
+  }
+  .placeholder .ph-ico { width: 52px; height: 52px; border-radius: 14px; background: var(--bg-elev-2); display: grid; place-items: center; }
+  .placeholder .ph-ico svg { width: 24px; height: 24px; color: var(--text-mut); }
+  .placeholder h4 { font-size: 15px; font-weight: 600; color: var(--text); }
+  .placeholder p { font-size: 12.5px; max-width: 340px; line-height: 1.55; }
+  .ph-pill { font-size: 11px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #9a9bff; background: var(--accent-soft); padding: 4px 10px; border-radius: 20px; }
+
+
+  /* ---------- Screen 3 — Report ---------- */
+  .report-wrap { max-width: 860px; margin: 0 auto; }
+  .report {
+    background: var(--panel); border: 1px solid var(--border-soft); border-radius: var(--radius);
+    box-shadow: var(--shadow); overflow: hidden;
+  }
+  .report-banner { padding: 28px 36px; border-bottom: 1px solid var(--border-soft); background: linear-gradient(180deg, #14171f, var(--panel)); }
+  .report-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #9a9bff; font-weight: 650; margin-bottom: 10px; }
+  .report-title { font-size: 24px; font-weight: 680; letter-spacing: -0.03em; }
+  .report-meta { display: flex; flex-wrap: wrap; gap: 22px; margin-top: 16px; }
+  .report-meta div { display: flex; flex-direction: column; gap: 2px; }
+  .report-meta .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; }
+  .report-meta .v { font-size: 13.5px; font-weight: 550; }
+  .report-body { padding: 14px 36px 36px; }
+  .sec { padding: 26px 0; border-bottom: 1px solid var(--border-soft); }
+  .sec:last-child { border-bottom: none; }
+  .sec-head { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+  .sec-num { width: 24px; height: 24px; border-radius: 7px; background: var(--bg-elev-2); display: grid; place-items: center; font-size: 12px; font-weight: 650; color: var(--text-mut); font-family: var(--mono); }
+  .sec-head h3 { font-size: 16px; font-weight: 620; letter-spacing: -0.02em; }
+  .sec p { color: var(--text-mut); font-size: 14px; line-height: 1.7; margin-bottom: 12px; }
+  .sec p:last-child { margin-bottom: 0; }
+  .sec strong { color: var(--text); font-weight: 600; }
+  .callout { background: var(--bg-elev); border: 1px solid var(--border-soft); border-left: 3px solid var(--accent-2); border-radius: var(--radius-sm); padding: 14px 16px; margin: 6px 0; }
+  .callout .ct { font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; margin-bottom: 5px; }
+  .callout .cv { font-size: 14px; color: var(--text); line-height: 1.6; }
+  .impact-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 6px; }
+  .impact-cell { background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 14px; }
+  .impact-cell .k { font-size: 11.5px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; font-weight: 600; }
+  .impact-cell .v { font-size: 21px; font-weight: 650; letter-spacing: -0.02em; margin-top: 6px; }
+  .impact-cell .s { font-size: 12px; color: var(--text-mut); margin-top: 3px; }
+  .evidence-list { display: flex; flex-direction: column; gap: 9px; }
+  .ev-item { display: flex; align-items: center; gap: 12px; background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 12px 14px; }
+  .ev-item .ev-ico { width: 30px; height: 30px; border-radius: 8px; background: var(--bg-elev-2); display: grid; place-items: center; flex-shrink: 0; }
+  .ev-item .ev-ico svg { width: 15px; height: 15px; color: var(--text-mut); }
+  .ev-item .ev-main { flex: 1; }
+  .ev-item .ev-t { font-size: 13.5px; font-weight: 550; }
+  .ev-item .ev-d { font-size: 12px; color: var(--text-dim); }
+  .approval-row { display: flex; align-items: center; gap: 14px; background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 16px; }
+  .approval-row .ap-av { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(140deg,#3b4252,#2a2f3a); display: grid; place-items: center; font-weight: 650; color: #cdd2db; }
+  .approval-row .ap-main { flex: 1; }
+  .approval-row .ap-n { font-weight: 600; font-size: 14px; }
+  .approval-row .ap-r { font-size: 12.5px; color: var(--text-dim); }
+
+  @media (max-width: 1160px) {
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .ops-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto auto auto; grid-template-areas: "summary" "center" "decision" "conversation" "recommend"; height: auto; }
+    .ops-panel { min-height: 280px; }
+  }
+  @media (max-width: 820px) {
+    .app { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .search { display: none; }
+    .stats { grid-template-columns: 1fr; }
+    .content { padding: 18px; }
+    .impact-grid { grid-template-columns: 1fr; }
+    table { font-size: 12.5px; }
+  }
+
+  /* ============================================================
+     MULTI-AGENT ORCHESTRATION  (Ops Center only — additive)
+     ============================================================ */
+  .agent-canvas { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+  .agent-card {
+    position: relative; display: flex; align-items: flex-start; gap: 12px;
+    background: var(--bg-elev); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm); padding: 13px 14px;
+    transition: border-color .3s ease, background .3s ease, box-shadow .3s ease, transform .3s ease;
+    z-index: 1;
+  }
+  .agent-card .ag-avatar {
+    width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+    display: grid; place-items: center; background: var(--bg-elev-2);
+    border: 1px solid var(--border); transition: .3s ease;
+  }
+  .agent-card .ag-avatar svg { width: 17px; height: 17px; color: var(--text-mut); transition: color .3s ease; }
+  .agent-card .ag-main { flex: 1; min-width: 0; }
+  .agent-card .ag-top { display: flex; align-items: center; gap: 8px; }
+  .agent-card .ag-name { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; }
+  .agent-card .ag-role { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 600; }
+  .agent-card .ag-status { display: flex; align-items: center; gap: 7px; margin-top: 5px; }
+  .agent-card .ag-status .ag-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-dim); flex-shrink: 0; transition: background .3s ease; }
+  .agent-card .ag-status-text { font-size: 12.5px; color: var(--text-mut); font-variant-numeric: tabular-nums; }
+  .agent-card .ag-state {
+    margin-left: auto; align-self: flex-start; font-size: 10.5px; font-weight: 650;
+    letter-spacing: 0.03em; text-transform: uppercase; padding: 3px 8px; border-radius: 20px;
+    background: rgba(255,255,255,0.05); color: var(--text-mut); flex-shrink: 0; transition: .3s ease;
+  }
+  .agent-card .ag-progress {
+    height: 3px; border-radius: 3px; background: var(--bg-elev-2);
+    margin-top: 10px; overflow: hidden; opacity: 0; max-height: 0;
+    transition: opacity .3s ease, max-height .3s ease;
+  }
+  .agent-card .ag-progress .ag-bar {
+    height: 100%; width: 30%; border-radius: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  }
+  .agent-card .ag-result { display: none; margin-top: 10px; gap: 8px; flex-wrap: wrap; }
+  .agent-card.show-result .ag-result { display: flex; }
+  .ag-metric {
+    display: flex; flex-direction: column; gap: 1px;
+    background: var(--bg-elev-2); border: 1px solid var(--border-soft);
+    border-radius: var(--radius-sm); padding: 7px 11px; animation: agPop .35s ease backwards;
+  }
+  .ag-metric .mk { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 650; }
+  .ag-metric .mv { font-size: 14px; font-weight: 650; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; color: #4dd699; }
+  @keyframes agPop { from { opacity: 0; transform: translateY(4px) scale(.97);} to { opacity:1; transform:none; } }
+  .agent-card.waiting { opacity: .72; }
+  .agent-card.working {
+    border-color: rgba(99,102,241,0.55);
+    background: linear-gradient(180deg, rgba(99,102,241,0.06), var(--bg-elev));
+    box-shadow: 0 0 0 1px rgba(99,102,241,0.18), 0 8px 26px rgba(99,91,255,0.12); opacity: 1;
+  }
+  .agent-card.working .ag-avatar { border-color: rgba(99,102,241,0.6); background: var(--accent-soft); }
+  .agent-card.working .ag-avatar svg { color: #b4b6ff; }
+  .agent-card.working .ag-status .ag-dot { background: var(--accent); animation: agPulse 1.1s ease-in-out infinite; }
+  .agent-card.working .ag-status-text { color: var(--text); }
+  .agent-card.working .ag-state { background: var(--accent-soft); color: #b4b6ff; }
+  .agent-card.working .ag-progress { opacity: 1; max-height: 8px; }
+  .agent-card.working .ag-progress .ag-bar { animation: agIndet 1.15s ease-in-out infinite; }
+  @keyframes agPulse { 0%,100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99,102,241,0.5);} 50% { transform: scale(1.25); box-shadow: 0 0 0 4px rgba(99,102,241,0);} }
+  @keyframes agIndet { 0% { transform: translateX(-120%);} 100% { transform: translateX(360%);} }
+  .agent-card.completed { border-color: rgba(43,182,115,0.4); opacity: 1; }
+  .agent-card.completed .ag-avatar { border-color: rgba(43,182,115,0.45); background: var(--green-soft); }
+  .agent-card.completed .ag-avatar svg { color: #4dd699; }
+  .agent-card.completed .ag-status .ag-dot { background: var(--green); }
+  .agent-card.completed .ag-status-text { color: var(--text-mut); }
+  .agent-card.completed .ag-state { background: var(--green-soft); color: #4dd699; }
+  .agent-card.completed .ag-progress { opacity: 0; max-height: 0; }
+  .agent-card.is-manager .ag-avatar { background: linear-gradient(150deg, rgba(99,91,255,0.25), rgba(76,63,214,0.18)); }
+  .agent-link { height: 22px; display: flex; justify-content: center; position: relative; }
+  .agent-link::before { content: ""; width: 2px; height: 100%; background: var(--border); border-radius: 2px; transition: background .3s ease; }
+  .agent-link.armed::before { background: linear-gradient(180deg, var(--green), var(--accent)); }
+  .agent-link .lk-pulse {
+    position: absolute; top: -3px; left: 50%; width: 7px; height: 7px; margin-left: -3.5px;
+    border-radius: 50%; background: var(--accent); opacity: 0; box-shadow: 0 0 10px 2px rgba(99,102,241,0.7);
+  }
+  .agent-link.flowing .lk-pulse { animation: lkFlow 1s ease-in-out infinite; }
+  @keyframes lkFlow { 0% { top: -3px; opacity: 0;} 15% { opacity: 1;} 85% { opacity: 1;} 100% { top: 100%; opacity: 0;} }
+  .decision-log { display: flex; flex-direction: column; gap: 0; }
+  .dlog-item { display: flex; gap: 12px; padding: 10px 2px; position: relative; animation: dlogIn .4s cubic-bezier(.2,.7,.3,1) backwards; }
+  .dlog-item + .dlog-item { border-top: 1px solid var(--border-soft); }
+  @keyframes dlogIn { from { opacity: 0; transform: translateX(14px);} to { opacity:1; transform:none; } }
+  .dlog-time { font-family: var(--mono); font-size: 11.5px; color: var(--text-dim); flex-shrink: 0; width: 38px; padding-top: 1px; font-variant-numeric: tabular-nums; }
+  .dlog-rail { position: relative; width: 12px; flex-shrink: 0; display: flex; justify-content: center; }
+  .dlog-rail::before { content: ""; position: absolute; top: 4px; bottom: -14px; width: 2px; background: var(--border-soft); }
+  .dlog-item:last-child .dlog-rail::before { display: none; }
+  .dlog-node { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); margin-top: 3px; box-shadow: 0 0 0 3px var(--accent-soft); z-index: 1; }
+  .dlog-item.done .dlog-node { background: var(--green); box-shadow: 0 0 0 3px var(--green-soft); }
+  .dlog-text { font-size: 12.5px; color: var(--text); line-height: 1.4; }
+  .dlog-text .dlog-sub { display: block; font-size: 11px; color: var(--text-dim); margin-top: 1px; }
+  .conv-stream { display: flex; flex-direction: column; gap: 12px; }
+  .conv-msg { display: flex; gap: 10px; animation: convIn .35s ease backwards; }
+  @keyframes convIn { from { opacity: 0; transform: translateY(6px);} to { opacity:1; transform:none; } }
+  .conv-av { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; }
+  .conv-bubble { min-width: 0; }
+  .conv-meta { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; }
+  .conv-who { font-size: 12.5px; font-weight: 600; }
+  .conv-when { font-size: 10.5px; color: var(--text-dim); font-family: var(--mono); }
+  .conv-body {
+    font-size: 13px; color: var(--text-mut); line-height: 1.45;
+    background: var(--bg-elev); border: 1px solid var(--border-soft);
+    border-radius: 4px 10px 10px 10px; padding: 7px 11px; display: inline-block;
+  }
+  .conv-body .mention { color: #9a9bff; font-weight: 600; }
+  .conv-typing { display: inline-flex; gap: 4px; padding: 9px 11px; }
+  .conv-typing span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); animation: typb 1s infinite ease-in-out; }
+  .conv-typing span:nth-child(2) { animation-delay: .15s; }
+  .conv-typing span:nth-child(3) { animation-delay: .3s; }
+  @keyframes typb { 0%,60%,100% { opacity:.3; transform: translateY(0);} 30% { opacity:1; transform: translateY(-3px);} }
+  .rec-console { display: flex; flex-direction: column; height: 100%; }
+  .rec-pending { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; color: var(--text-dim); padding: 16px; }
+  .rec-pending .rec-spin { width: 30px; height: 30px; border-radius: 50%; border: 2.5px solid var(--border); border-top-color: var(--accent); animation: recSpin .8s linear infinite; }
+  @keyframes recSpin { to { transform: rotate(360deg); } }
+  .rec-pending p { font-size: 12.5px; max-width: 230px; }
+  .rec-ready { display: none; flex-direction: column; gap: 11px; animation: fade .35s ease; }
+  .rec-ready.show { display: flex; }
+  .rec-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+  .rec-cell { background: var(--bg-elev); border: 1px solid var(--border-soft); border-radius: var(--radius-sm); padding: 10px 12px; }
+  .rec-cell.full { grid-column: 1 / -1; }
+  .rec-cell .rk { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 650; }
+  .rec-cell .rv { font-size: 15px; font-weight: 650; letter-spacing: -0.01em; margin-top: 3px; font-variant-numeric: tabular-nums; }
+  .rec-cell .rv.green { color: #4dd699; }
+  .rec-actions { display: flex; gap: 8px; margin-top: 2px; }
+  .rec-actions .btn { flex: 1; justify-content: center; padding: 9px 8px; }
+  .btn.success { background: var(--green); border-color: var(--green); color: #06241a; font-weight: 650; }
+  .btn.success:hover { background: #25a567; border-color: #25a567; }
+
+  /* ---------- Investigation progress tracker (Ops Center) ---------- */
+  .invest-progress {
+    display: flex; align-items: center; gap: 0;
+    background: var(--panel); border: 1px solid var(--border-soft);
+    border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 14px 18px; margin-bottom: 16px; overflow-x: auto;
+  }
+  .ip-step { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+  .ip-node {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    display: grid; place-items: center; font-size: 11px; font-weight: 700;
+    background: var(--bg-elev-2); border: 1px solid var(--border);
+    color: var(--text-dim); transition: background .35s ease, border-color .35s ease, color .35s ease, box-shadow .35s ease;
+    font-variant-numeric: tabular-nums;
+  }
+  .ip-node .ip-check { width: 12px; height: 12px; display: none; }
+  .ip-label { font-size: 11.5px; font-weight: 600; color: var(--text-dim); white-space: nowrap; transition: color .35s ease; letter-spacing: -0.01em; }
+  .ip-line { height: 2px; flex: 1; min-width: 18px; background: var(--border); margin: 0 10px; border-radius: 2px; position: relative; overflow: hidden; }
+  .ip-line::after { content: ""; position: absolute; inset: 0; width: 0; background: linear-gradient(90deg, var(--green), var(--accent)); transition: width .5s ease; }
+  .ip-line.filled::after { width: 100%; }
+  .ip-step.done .ip-node { background: var(--green-soft); border-color: rgba(43,182,115,0.5); color: #4dd699; }
+  .ip-step.done .ip-node .ip-num { display: none; }
+  .ip-step.done .ip-node .ip-check { display: block; }
+  .ip-step.done .ip-label { color: var(--text-mut); }
+  .ip-step.active .ip-node { background: var(--accent-soft); border-color: rgba(99,102,241,0.6); color: #b4b6ff; animation: ipPulse 1.7s ease-in-out infinite; }
+  .ip-step.active .ip-label { color: var(--text); }
+  @keyframes ipPulse { 0%,100% { box-shadow: 0 0 0 3px rgba(99,102,241,0.10);} 50% { box-shadow: 0 0 0 6px rgba(99,102,241,0);} }
+
+  /* ---------- Expandable agent detail ---------- */
+  .agent-card { cursor: pointer; }
+  .agent-card:hover { border-color: var(--border); }
+  .ag-chevron { width: 14px; height: 14px; color: var(--text-dim); flex-shrink: 0; transition: transform .3s ease, color .3s ease; }
+  .agent-card.expanded .ag-chevron { transform: rotate(180deg); color: var(--text-mut); }
+  .ag-detail { width: 100%; max-height: 0; opacity: 0; overflow: hidden; transition: max-height .4s ease, opacity .3s ease, margin-top .3s ease; margin-top: 0; }
+  .agent-card.expanded .ag-detail { max-height: 460px; opacity: 1; margin-top: 11px; }
+  .ag-detail-inner { border-top: 1px solid var(--border-soft); padding-top: 11px; display: flex; flex-direction: column; gap: 11px; }
+  .ag-d-row { display: flex; flex-direction: column; gap: 4px; }
+  .ag-d-k { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 650; }
+  .ag-d-v { font-size: 12.5px; color: var(--text); line-height: 1.45; }
+  .ag-d-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ag-d-tag { font-size: 11px; font-family: var(--mono); color: var(--text-mut); background: var(--bg-elev-2); border: 1px solid var(--border-soft); border-radius: 6px; padding: 3px 8px; }
+  .ag-d-v.conf { color: #4dd699; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Completion summary (Recommendation Console) ---------- */
+  .rec-complete-head { display: flex; align-items: center; gap: 11px; padding-bottom: 3px; animation: agPop .4s ease backwards; }
+  .rec-complete-head .rc-badge { width: 32px; height: 32px; border-radius: 9px; background: var(--green-soft); display: grid; place-items: center; flex-shrink: 0; }
+  .rec-complete-head .rc-badge svg { width: 17px; height: 17px; color: #4dd699; }
+  .rec-complete-head .rc-t { font-size: 14.5px; font-weight: 650; letter-spacing: -0.01em; }
+  .rec-complete-head .rc-s { font-size: 11px; color: var(--text-dim); }
+  .rec-rec-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); font-weight: 650; margin-top: 4px; }
+  .rec-actions.stack { flex-direction: column; }
+  .rec-actions.stack .btn { width: 100%; }
+  .rec-actions .btn.sel { box-shadow: 0 0 0 1px var(--accent); border-color: var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .agent-card .ag-status .ag-dot, .agent-card.working .ag-progress .ag-bar,
+    .agent-link.flowing .lk-pulse, .conv-typing span, .rec-pending .rec-spin,
+    .ip-step.active .ip-node { animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 13l5 5L20 6" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <div class="brand-name">PayResolve AI</div>
+        <div class="brand-sub">Payment Operations</div>
+      </div>
+    </div>
+
+    <div class="nav-label">Workspace</div>
+    <div class="nav-item active" data-screen="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      <span>Operations Dashboard</span>
+    </div>
+    <div class="nav-item" data-screen="ops">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>
+      <span>AI Operations Center</span>
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" data-screen="report">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>
+      <span>Investigation Report</span>
+    </div>
+
+    <div class="nav-label" style="margin-top:6px;">Insights</div>
+    <div class="nav-item" data-screen="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 5-7"/></svg>
+      <span>Gateway Analytics</span>
+    </div>
+    <div class="nav-item" data-screen="dashboard">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>Fraud & Risk</span>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="user-chip">
+        <div class="avatar">DK</div>
+        <div class="user-meta">
+          <div class="nm">Devyani Kulkarni</div>
+          <div class="rl">Payment Ops Lead</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== MAIN ===================== -->
+  <div class="main">
+    <header class="topbar">
+      <div class="crumbs">
+        <span>PayResolve</span><span class="sep">/</span><b id="crumbCurrent">Operations Dashboard</b>
+      </div>
+      <div class="topbar-right">
+        <div class="search">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input placeholder="Search cases, merchants, gateways…" />
+          <span class="kbd">⌘K</span>
+        </div>
+        <div class="icon-btn" title="Notifications">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 01-3.4 0"/></svg>
+        </div>
+        <div class="icon-btn" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.6 1.6 0 00-2.7 1.1V21a2 2 0 01-4 0v-.1A1.6 1.6 0 006.7 19l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.6 1.6 0 00-1.1-2.7H3a2 2 0 010-4h.1A1.6 1.6 0 005 6.7l-.1-.1a2 2 0 112.8-2.8l.1.1a1.6 1.6 0 001.8.3H10a1.6 1.6 0 001-1.5V2a2 2 0 014 0v.1a1.6 1.6 0 001 1.5 1.6 1.6 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.6 1.6 0 00-.3 1.8V10a1.6 1.6 0 001.5 1H22a2 2 0 010 4h-.1a1.6 1.6 0 00-1.5 1z"/></svg>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- ============ SCREEN 1: DASHBOARD ============ -->
+      <section class="screen active" id="screen-dashboard">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Operations Dashboard</div>
+            <div class="page-desc">Real-time payment health across all merchants and gateways · Updated 2 min ago</div>
+          </div>
+          <div class="head-actions">
+            <select id="datasetSelect" class="btn" aria-label="Investigation dataset"
+                    style="background:var(--bg-elev);color:var(--text);appearance:none;-webkit-appearance:none;padding-right:30px;background-image:url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2212%22 height=%2212%22 fill=%22none%22 stroke=%22%2399a1b0%22 stroke-width=%222%22><path d=%22M3 4.5l3 3 3-3%22/></svg>');background-repeat:no-repeat;background-position:right 11px center;">
+              <option value="insufficient-funds">Insufficient Funds</option>
+              <option value="expired-card">Expired Card</option>
+              <option value="do-not-honor">Do Not Honor</option>
+              <option value="issuer-unavailable">Issuer Unavailable</option>
+              <option value="authentication-failure">Authentication Failure</option>
+            </select>
+            <button class="btn primary" id="loadInvestigationBtn" onclick="loadDataset(document.getElementById('datasetSelect').value)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Load Investigation
+            </button>
+            <button class="btn ghost">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg>
+              Refresh
+            </button>
+            <button class="btn primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              New Investigation
+            </button>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">
+            <div class="stat-top">
+              <span class="stat-label">Today's Transactions</span>
+              <span class="stat-ico" style="background:var(--blue-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="#7eaeff" stroke-width="2"><path d="M3 10h18M7 15h4M3 6h18v12H3z"/></svg></span>
+            </div>
+            <div class="stat-val">1,284,907</div>
+            <div class="stat-delta delta-up">▲ 4.2% vs. yesterday</div>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <span class="stat-label">Failed Transactions</span>
+              <span class="stat-ico" style="background:var(--red-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="#ff8a8d" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg></span>
+            </div>
+            <div class="stat-val" id="statFailedVal">8,431</div>
+            <div class="stat-delta delta-down" id="statFailedSub">▲ 18.6% — above threshold</div>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <span class="stat-label">AI Investigations Running</span>
+              <span class="stat-ico" style="background:var(--accent-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="#b4b6ff" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/></svg></span>
+            </div>
+            <div class="stat-val" id="statRunVal">7</div>
+            <div class="stat-delta" id="statRunSub">3 high priority · 4 routine</div>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <span class="stat-label">Revenue At Risk</span>
+              <span class="stat-ico" style="background:var(--amber-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="#f0c462" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+            </div>
+            <div class="stat-val" id="statRiskVal">$2.41M</div>
+            <div class="stat-delta delta-warn" id="statRiskSub">Across 7 open cases</div>
+          </div>
+          <div class="stat">
+            <div class="stat-top">
+              <span class="stat-label">Avg. Investigation Time</span>
+              <span class="stat-ico" style="background:var(--green-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="#4dd699" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+            </div>
+            <div class="stat-val">6m 12s</div>
+            <div class="stat-delta delta-up">▼ 41% vs. manual triage</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Recent Investigations <span class="muted">15 active cases</span></div>
+            <div class="filters">
+              <button class="chip active">All</button>
+              <button class="chip">Critical</button>
+              <button class="chip">High</button>
+              <button class="chip">In Review</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Case ID</th>
+                <th>Merchant</th>
+                <th>Gateway</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th class="right">Revenue At Risk</th>
+                <th class="right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="casesBody"></tbody>
+          </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 2: AI OPERATIONS CENTER ============ -->
+      <section class="screen" id="screen-ops">
+        <div class="page-head">
+          <div>
+            <div class="page-title">AI Operations Center</div>
+            <div class="page-desc" id="opsSubtitle">—</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn ghost" onclick="go('dashboard')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Back to Dashboard
+            </button>
+            <button class="btn primary" onclick="go('report')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/></svg>
+              View Report
+            </button>
+          </div>
+        </div>
+
+        <div class="invest-progress" id="investProgress">
+          <div class="ip-step" data-stage="0"><span class="ip-node"><span class="ip-num">1</span><svg class="ip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span class="ip-label">Planning</span></div>
+          <div class="ip-line"></div>
+          <div class="ip-step" data-stage="1"><span class="ip-node"><span class="ip-num">2</span><svg class="ip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span class="ip-label">Classification</span></div>
+          <div class="ip-line"></div>
+          <div class="ip-step" data-stage="2"><span class="ip-node"><span class="ip-num">3</span><svg class="ip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span class="ip-label">Diagnosis</span></div>
+          <div class="ip-line"></div>
+          <div class="ip-step" data-stage="3"><span class="ip-node"><span class="ip-num">4</span><svg class="ip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span class="ip-label">Recovery</span></div>
+          <div class="ip-line"></div>
+          <div class="ip-step" data-stage="4"><span class="ip-node"><span class="ip-num">5</span><svg class="ip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span class="ip-label">Business Impact</span></div>
+          <div class="ip-line"></div>
+          <div class="ip-step" data-stage="5"><span class="ip-node"><span class="ip-num">6</span><svg class="ip-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg></span><span class="ip-label">Executive Summary</span></div>
+        </div>
+
+        <div class="ops-grid">
+          <!-- LEFT: Investigation Summary -->
+          <div class="ops-panel area-summary">
+            <div class="ops-panel-head">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg></span>
+              <div><h3>Investigation Summary</h3><div class="sub" id="invCaseSub">—</div></div>
+            </div>
+            <div class="ops-panel-body">
+              <div class="summary-row">
+                <span class="k">Merchant</span>
+                <span class="v"><span class="merchant-logo" id="invMerchantLogo" style="background:#475569">—</span> <span id="invMerchant">—</span></span>
+              </div>
+              <div class="summary-row">
+                <span class="k">Gateway</span>
+                <span class="v gateway-tag" id="invGateway">—</span>
+              </div>
+              <div class="summary-row">
+                <span class="k">Payment Network</span>
+                <span class="v" id="invNetwork">—</span>
+              </div>
+              <div class="summary-row">
+                <span class="k">Affected Transactions</span>
+                <span class="v" id="invAffected">—</span>
+              </div>
+              <div class="summary-row">
+                <span class="k">Revenue At Risk</span>
+                <span class="v risk-val" id="invRisk">—</span>
+              </div>
+              <div class="summary-row">
+                <span class="k">Priority</span>
+                <span class="v" id="invPriority">—</span>
+              </div>
+              <div class="summary-row">
+                <span class="k">SLA Window</span>
+                <span class="v">42 min remaining</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CENTER: AI Operations Center placeholder -->
+          <div class="ops-panel area-center">
+            <div class="ops-panel-head">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span>
+              <div><h3>Multi-Agent Workspace</h3><div class="sub">Orchestration canvas</div></div>
+            </div>
+            <div class="ops-panel-body agent-canvas" id="agentCanvas">
+              <div class="agent-card waiting is-manager" id="ag-manager">
+                <div class="ag-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2l2.5 5 5.5.8-4 3.9.9 5.5L12 20l-4.9 2.6.9-5.5-4-3.9 5.5-.8z"/></svg></div>
+                <div class="ag-main">
+                  <div class="ag-top"><span class="ag-name">Manager Agent</span><span class="ag-role">Orchestrator</span><span class="ag-state">Waiting</span><svg class="ag-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+                  <div class="ag-status"><span class="ag-dot"></span><span class="ag-status-text" id="st-manager">Planning Investigation</span></div>
+                  <div class="ag-progress"><div class="ag-bar"></div></div>
+                  <div class="ag-result" id="res-manager"></div>
+                  <div class="ag-detail"><div class="ag-detail-inner">
+                    <div class="ag-d-row"><div class="ag-d-k">Evidence Used</div><div class="ag-d-tags"><span class="ag-d-tag">Failure Output</span><span class="ag-d-tag">Root Cause</span><span class="ag-d-tag">Recovery Plan</span><span class="ag-d-tag">Revenue Model</span></div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Inputs</div><div class="ag-d-v" id="agd-manager-inputs">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Outputs</div><div class="ag-d-v">Executive summary · approved recommendation</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Confidence</div><div class="ag-d-v conf" id="agd-manager-conf">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Reason for decision</div><div class="ag-d-v">Consensus across all specialist agents met the 90% approval threshold; no human escalation required.</div></div>
+                  </div></div>
+                </div>
+              </div>
+              <div class="agent-link" id="lk-0"><span class="lk-pulse"></span></div>
+              <div class="agent-card waiting" id="ag-failure">
+                <div class="ag-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M3 12h18M3 18h12"/><circle cx="19" cy="18" r="2.5"/></svg></div>
+                <div class="ag-main">
+                  <div class="ag-top"><span class="ag-name">Failure Classification Agent</span><span class="ag-role">Triage</span><span class="ag-state">Waiting</span><svg class="ag-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+                  <div class="ag-status"><span class="ag-dot"></span><span class="ag-status-text" id="st-failure">Waiting</span></div>
+                  <div class="ag-progress"><div class="ag-bar"></div></div>
+                  <div class="ag-result" id="res-failure"></div>
+                  <div class="ag-detail"><div class="ag-detail-inner">
+                    <div class="ag-d-row"><div class="ag-d-k">Evidence Used</div><div class="ag-d-tags"><span class="ag-d-tag" id="agd-failure-code">—</span><span class="ag-d-tag">Gateway Response</span><span class="ag-d-tag">Issuer Message</span><span class="ag-d-tag">Historical Retry Pattern</span></div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Inputs</div><div class="ag-d-v" id="agd-failure-inputs">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Outputs</div><div class="ag-d-v" id="agd-failure-out">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Confidence</div><div class="ag-d-v conf" id="agd-failure-conf">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Reason for decision</div><div class="ag-d-v" id="agd-failure-reason">—</div></div>
+                  </div></div>
+                </div>
+              </div>
+              <div class="agent-link" id="lk-1"><span class="lk-pulse"></span></div>
+              <div class="agent-card waiting" id="ag-root">
+                <div class="ag-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></div>
+                <div class="ag-main">
+                  <div class="ag-top"><span class="ag-name">Root Cause Agent</span><span class="ag-role">Diagnosis</span><span class="ag-state">Waiting</span><svg class="ag-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+                  <div class="ag-status"><span class="ag-dot"></span><span class="ag-status-text" id="st-root">Waiting</span></div>
+                  <div class="ag-progress"><div class="ag-bar"></div></div>
+                  <div class="ag-result" id="res-root"></div>
+                  <div class="ag-detail"><div class="ag-detail-inner">
+                    <div class="ag-d-row"><div class="ag-d-k">Evidence Used</div><div class="ag-d-tags"><span class="ag-d-tag">Issuer Response Code</span><span class="ag-d-tag">Merchant Config</span><span class="ag-d-tag">Retry History</span></div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Inputs</div><div class="ag-d-v" id="agd-root-inputs">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Outputs</div><div class="ag-d-v" id="agd-root-out">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Confidence</div><div class="ag-d-v conf" id="agd-root-conf">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Reason for decision</div><div class="ag-d-v" id="agd-root-reason">—</div></div>
+                  </div></div>
+                </div>
+              </div>
+              <div class="agent-link" id="lk-2"><span class="lk-pulse"></span></div>
+              <div class="agent-card waiting" id="ag-recovery">
+                <div class="ag-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/></svg></div>
+                <div class="ag-main">
+                  <div class="ag-top"><span class="ag-name">Recovery Strategy Agent</span><span class="ag-role">Remediation</span><span class="ag-state">Waiting</span><svg class="ag-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+                  <div class="ag-status"><span class="ag-dot"></span><span class="ag-status-text" id="st-recovery">Waiting</span></div>
+                  <div class="ag-progress"><div class="ag-bar"></div></div>
+                  <div class="ag-result" id="res-recovery"></div>
+                  <div class="ag-detail"><div class="ag-detail-inner">
+                    <div class="ag-d-row"><div class="ag-d-k">Evidence Used</div><div class="ag-d-tags"><span class="ag-d-tag">Smart-Retry Policy</span><span class="ag-d-tag">Merchant SLA</span><span class="ag-d-tag">Payroll-Cycle Timing</span></div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Inputs</div><div class="ag-d-v" id="agd-recovery-inputs">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Outputs</div><div class="ag-d-v" id="agd-recovery-out">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Confidence</div><div class="ag-d-v conf" id="agd-recovery-conf">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Reason for decision</div><div class="ag-d-v" id="agd-recovery-reason">—</div></div>
+                  </div></div>
+                </div>
+              </div>
+              <div class="agent-link" id="lk-3"><span class="lk-pulse"></span></div>
+              <div class="agent-card waiting" id="ag-revenue">
+                <div class="ag-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+                <div class="ag-main">
+                  <div class="ag-top"><span class="ag-name">Revenue Impact Agent</span><span class="ag-role">Financials</span><span class="ag-state">Waiting</span><svg class="ag-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div>
+                  <div class="ag-status"><span class="ag-dot"></span><span class="ag-status-text" id="st-revenue">Waiting</span></div>
+                  <div class="ag-progress"><div class="ag-bar"></div></div>
+                  <div class="ag-result" id="res-revenue"></div>
+                  <div class="ag-detail"><div class="ag-detail-inner">
+                    <div class="ag-d-row"><div class="ag-d-k">Evidence Used</div><div class="ag-d-tags"><span class="ag-d-tag">Retry-Cohort History</span><span class="ag-d-tag">Decline Volume</span><span class="ag-d-tag">Avg Ticket</span></div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Inputs</div><div class="ag-d-v" id="agd-revenue-inputs">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Outputs</div><div class="ag-d-v" id="agd-revenue-out">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Confidence</div><div class="ag-d-v conf" id="agd-revenue-conf">—</div></div>
+                    <div class="ag-d-row"><div class="ag-d-k">Reason for decision</div><div class="ag-d-v" id="agd-revenue-reason">—</div></div>
+                  </div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Decision Log placeholder -->
+          <div class="ops-panel area-decision">
+            <div class="ops-panel-head">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg></span>
+              <div><h3>Decision Log</h3><div class="sub">Audit trail</div></div>
+            </div>
+            <div class="ops-panel-body"><div class="decision-log" id="decisionLog"></div></div>
+          </div>
+
+          <!-- BOTTOM: Conversation placeholder -->
+          <div class="ops-panel area-conversation">
+            <div class="ops-panel-head">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+              <div><h3>Conversation</h3><div class="sub">Operator ↔ Agents</div></div>
+            </div>
+            <div class="ops-panel-body"><div class="conv-stream" id="convStream"></div></div>
+          </div>
+
+          <!-- BOTTOM RIGHT: Recommendation Console placeholder -->
+          <div class="ops-panel area-recommend">
+            <div class="ops-panel-head">
+              <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 18h6M10 22h4M12 2a7 7 0 00-4 12c.6.6 1 1.4 1 2h6c0-.6.4-1.4 1-2a7 7 0 00-4-12z"/></svg></span>
+              <div><h3>Recommendation Console</h3><div class="sub">Pending action</div></div>
+            </div>
+            <div class="ops-panel-body rec-console">
+              <div class="rec-pending" id="recPending">
+                <div class="rec-spin"></div>
+                <p id="recPendingText">Agents are still investigating. The final recommendation will surface here.</p>
+              </div>
+              <div class="rec-ready" id="recReady">
+                <div class="rec-complete-head">
+                  <span class="rc-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M5 13l4 4L19 7"/></svg></span>
+                  <div><div class="rc-t">Investigation Complete</div><div class="rc-s" id="recCaseSub">—</div></div>
+                </div>
+                <div class="rec-grid">
+                  <div class="rec-cell"><div class="rk">Agents Participated</div><div class="rv">5</div></div>
+                  <div class="rec-cell"><div class="rk">Duration</div><div class="rv" id="recDuration">18s</div></div>
+                  <div class="rec-cell"><div class="rk">Human Intervention</div><div class="rv">Not Required</div></div>
+                  <div class="rec-cell"><div class="rk">Confidence</div><div class="rv green" id="recConfidence">—</div></div>
+                </div>
+                <div class="rec-rec-label">Recommended Actions</div>
+                <div class="rec-actions stack">
+                  <button class="btn success" onclick="recAction(this,'Retry Payment Approved')">Retry Payment</button>
+                  <button class="btn" onclick="recAction(this,'Merchant Notified')">Notify Merchant</button>
+                  <button class="btn ghost" onclick="recAction(this,'Investigation Closed')">Close Investigation</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SCREEN 3: EXECUTIVE REPORT ============ -->
+      <section class="screen" id="screen-report">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Executive Investigation Report</div>
+            <div class="page-desc" id="rpPageDesc">—</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn ghost" onclick="go('ops')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              Back
+            </button>
+            <button class="btn primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export Report
+            </button>
+          </div>
+        </div>
+
+        <div class="report-wrap">
+          <div class="report">
+            <div class="report-banner">
+              <div class="report-tag">Confidential · Payment Operations</div>
+              <div class="report-title" id="rpTitle">—</div>
+              <div class="report-meta">
+                <div><span class="k">Case ID</span><span class="v" id="rpCaseId">—</span></div>
+                <div><span class="k">Merchant</span><span class="v" id="rpMerchant">—</span></div>
+                <div><span class="k">Gateway</span><span class="v" id="rpGateway">—</span></div>
+                <div><span class="k">Priority</span><span class="v" id="rpPriority">—</span></div>
+                <div><span class="k">Status</span><span class="v"><span class="badge b-green"><span class="dot"></span>Resolved</span></span></div>
+                <div><span class="k">Generated</span><span class="v" id="rpGenerated">—</span></div>
+              </div>
+            </div>
+
+            <div class="report-body">
+              <div class="sec">
+                <div class="sec-head"><span class="sec-num">1</span><h3>Executive Summary</h3></div>
+                <p>Between 08:14 and 11:02 UTC, <span id="rpMerchant2">—</span> experienced a <strong><span id="rpDeclineCount">—</span>-transaction decline spike</strong> on its <span id="rpGateway2">—</span> Live account, concentrated almost entirely on <span id="rpNetwork2">—</span> card-not-present authorizations. The investigation identified a dominant failure pattern of issuer response code <strong><span id="rpClassMention">—</span></strong> across the affected cohort, confirmed by retry-history correlation.</p>
+                <p>Total exposure reached <strong id="rpRisk1">—</strong> in at-risk authorization volume before automated remediation restored the prior routing configuration. No customer card data was compromised and no fraudulent activity was detected.</p>
+              </div>
+
+              <div class="sec">
+                <div class="sec-head"><span class="sec-num">2</span><h3>Root Cause</h3></div>
+                <p id="rpRootCause">—</p>
+                <div class="callout">
+                  <div class="ct">Confirmed Trigger</div>
+                  <div class="cv" id="rpTrigger">—</div>
+                </div>
+              </div>
+
+              <div class="sec">
+                <div class="sec-head"><span class="sec-num">3</span><h3>Recommendation</h3></div>
+                <p id="rpRecommendation">—</p>
+                <div class="callout">
+                  <div class="ct">Recommended Action</div>
+                  <div class="cv" id="rpRecommendedAction">—</div>
+                </div>
+              </div>
+
+              <div class="sec">
+                <div class="sec-head"><span class="sec-num">4</span><h3>Business Impact</h3></div>
+                <div class="impact-grid">
+                  <div class="impact-cell"><div class="k">Revenue At Risk</div><div class="v" id="rpImpactRisk">—</div><div class="s" id="rpImpactRiskSub">—</div></div>
+                  <div class="impact-cell"><div class="k">Recovered Volume</div><div class="v" id="rpRecovered">—</div><div class="s" id="rpRecoveredSub">—</div></div>
+                  <div class="impact-cell"><div class="k">Time to Resolution</div><div class="v" id="rpTTR">—</div><div class="s">Detection → fix</div></div>
+                </div>
+                <p style="margin-top:14px;">Net unrecoverable revenue is estimated at <strong id="rpUnrecoverable">—</strong> from abandoned sessions. Customer-facing impact was limited to a single checkout window with no chargeback or dispute escalation.</p>
+              </div>
+
+              <div class="sec">
+                <div class="sec-head"><span class="sec-num">5</span><h3>Evidence Summary</h3></div>
+                <div class="evidence-list" id="rpEvidence"></div>
+              </div>
+
+              <div class="sec">
+                <div class="sec-head"><span class="sec-num">6</span><h3>Approval Status</h3></div>
+                <div class="approval-row">
+                  <div class="ap-av">MR</div>
+                  <div class="ap-main">
+                    <div class="ap-n">Marcus Reyes · VP, Payment Operations</div>
+                    <div class="ap-r">Approved remediation and reviewed business impact</div>
+                  </div>
+                  <span class="badge b-green"><span class="dot"></span>Approved · 11:34 UTC</span>
+                </div>
+                <div class="approval-row" style="margin-top:10px;">
+                  <div class="ap-av">SC</div>
+                  <div class="ap-main">
+                    <div class="ap-n">Sofia Chen · Director, Risk & Compliance</div>
+                    <div class="ap-r">Signed off on fraud clearance and audit trail</div>
+                  </div>
+                  <span class="badge b-green"><span class="dot"></span>Approved · 11:41 UTC</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script src="datasets.js"></script>
+<script src="investigationEngine.js"></script>
+<script>
+  // ---------- Realistic case data ----------
+  const merchants = [
+    { code:"NW", color:"#c2410c", name:"Northwind Apparel", sub:"Retail · US" },
+    { code:"BL", color:"#0369a1", name:"Blue Lagoon Travel", sub:"Travel · EU" },
+    { code:"FK", color:"#7c3aed", name:"Forkright Foods", sub:"Marketplace · US" },
+    { code:"AT", color:"#059669", name:"Atlas Mobility", sub:"Mobility · LATAM" },
+    { code:"VR", color:"#be123c", name:"Verde Subscriptions", sub:"SaaS · Global" },
+    { code:"HM", color:"#b45309", name:"Halcyon Media", sub:"Streaming · US" },
+    { code:"QT", color:"#1d4ed8", name:"Quantum Tickets", sub:"Events · UK" },
+    { code:"PL", color:"#0891b2", name:"Polaris Logistics", sub:"B2B · US" },
+    { code:"SG", color:"#9333ea", name:"Sundial Goods", sub:"Retail · APAC" },
+    { code:"MV", color:"#dc2626", name:"Meridian Ventures", sub:"Fintech · US" },
+    { code:"OK", color:"#ca8a04", name:"Oakline Bank Pay", sub:"Banking · US" },
+    { code:"CR", color:"#16a34a", name:"Cresta Fitness", sub:"Subscription · EU" },
+    { code:"TD", color:"#2563eb", name:"Tidewater Energy", sub:"Utilities · US" },
+    { code:"NB", color:"#db2777", name:"Nimbus Cloud", sub:"SaaS · US" },
+    { code:"LX", color:"#475569", name:"Lumen Exchange", sub:"Crypto · Global" }
+  ];
+
+  const cases = [
+    { id:"PR-48217", m:0, gw:"Adyen",          net:"Visa · MC",   prio:"Critical", st:"Investigating", risk:486200 },
+    { id:"PR-48205", m:1, gw:"Stripe",         net:"Mastercard",  prio:"High",     st:"In Review",     risk:212940 },
+    { id:"PR-48198", m:2, gw:"Braintree",      net:"Amex",        prio:"Critical", st:"Investigating", risk:374500 },
+    { id:"PR-48190", m:3, gw:"dLocal",         net:"Visa",        prio:"Medium",   st:"Queued",        risk:88300  },
+    { id:"PR-48184", m:4, gw:"Stripe",         net:"Visa · MC",   prio:"High",     st:"Investigating", risk:156700 },
+    { id:"PR-48177", m:5, gw:"Worldpay",       net:"Discover",    prio:"Low",      st:"Monitoring",    risk:41200  },
+    { id:"PR-48169", m:6, gw:"Checkout.com",   net:"Visa",        prio:"High",     st:"In Review",     risk:198450 },
+    { id:"PR-48160", m:7, gw:"Cybersource",    net:"Mastercard",  prio:"Medium",   st:"Queued",        risk:73900  },
+    { id:"PR-48152", m:8, gw:"Adyen",          net:"JCB · Visa",  prio:"Medium",   st:"Investigating", risk:64750  },
+    { id:"PR-48144", m:9, gw:"Stripe",         net:"Amex",        prio:"Critical", st:"Escalated",     risk:421000 },
+    { id:"PR-48137", m:10,gw:"FIS",            net:"Visa · MC",   prio:"Low",      st:"Resolved",      risk:0      },
+    { id:"PR-48129", m:11,gw:"Mollie",         net:"Mastercard",  prio:"Medium",   st:"Monitoring",    risk:52600  },
+    { id:"PR-48121", m:12,gw:"Authorize.Net",  net:"Visa",        prio:"High",     st:"In Review",     risk:143820 },
+    { id:"PR-48114", m:13,gw:"Braintree",      net:"Visa · MC",   prio:"Low",      st:"Resolved",      risk:0      },
+    { id:"PR-48108", m:14,gw:"Checkout.com",   net:"Mastercard",  prio:"Medium",   st:"Queued",        risk:97400  }
+  ];
+
+  const prioClass = { Critical:"b-red", High:"b-amber", Medium:"b-blue", Low:"b-gray" };
+  const statusClass = {
+    Investigating:"b-violet", "In Review":"b-blue", Queued:"b-gray",
+    Monitoring:"b-amber", Escalated:"b-red", Resolved:"b-green"
+  };
+  const fmt = n => n === 0 ? "—" : "$" + n.toLocaleString("en-US");
+
+  /* ============================================================
+     DATASET CONFIGURATION
+     Each option in the Dashboard selector maps to a JSON file in
+     /data plus the case metadata used to label the investigation.
+     The transactions themselves live in those files and are loaded
+     on demand via InvestigationEngine.investigate() (fetch-based).
+     ============================================================ */
+  const DATASETS = {
+    "insufficient-funds": {
+      file: "data/insufficient-funds.json",
+      meta: { caseId:"PR-48217", merchant:"Northwind Apparel",   merchantCode:"NW", merchantColor:"#c2410c", merchantSub:"Retail \u00b7 US",      gateway:"Adyen" }
+    },
+    "expired-card": {
+      file: "data/expired-card.json",
+      meta: { caseId:"PR-48232", merchant:"Blue Lagoon Travel",  merchantCode:"BL", merchantColor:"#0369a1", merchantSub:"Travel \u00b7 EU",      gateway:"Stripe" }
+    },
+    "do-not-honor": {
+      file: "data/do-not-honor.json",
+      meta: { caseId:"PR-48244", merchant:"Forkright Foods",     merchantCode:"FK", merchantColor:"#7c3aed", merchantSub:"Marketplace \u00b7 US", gateway:"Braintree" }
+    },
+    "issuer-unavailable": {
+      file: "data/issuer-unavailable.json",
+      meta: { caseId:"PR-48258", merchant:"Atlas Mobility",      merchantCode:"AT", merchantColor:"#059669", merchantSub:"Mobility \u00b7 LATAM",  gateway:"dLocal" }
+    },
+    "authentication-failure": {
+      file: "data/authentication-failure.json",
+      meta: { caseId:"PR-48269", merchant:"Verde Subscriptions", merchantCode:"VR", merchantColor:"#be123c", merchantSub:"SaaS \u00b7 Global",    gateway:"Checkout.com" }
+    }
+  };
+
+  // The single Investigation Object the entire UI binds to (populated on load).
+  // Exposed as window.currentInvestigation so every screen reads one object.
+  let currentInvestigation = null;
+
+  // ---------- Dashboard "Recent Investigations" table ----------
+  function renderCasesTable(){
+    const body = document.getElementById("casesBody");
+    body.innerHTML = cases.map(c => {
+      const m = merchants[c.m];
+      // A case may carry explicit merchant fields (the lead row mirrors the
+      // live Investigation Object); otherwise fall back to the roster entry.
+      const mName  = c.merchantName  || m.name;
+      const mCode  = c.merchantCode  || m.code;
+      const mColor = c.merchantColor || m.color;
+      const mSub   = c.merchantSub   || m.sub;
+      return `<tr>
+      <td><span class="case-id">${c.id}</span></td>
+      <td>
+        <div class="merchant-cell">
+          <span class="merchant-logo" style="background:${mColor}">${mCode}</span>
+          <div><div class="merchant-name">${mName}</div><div class="merchant-sub">${mSub}</div></div>
+        </div>
+      </td>
+      <td><span class="gateway-tag">${c.gw}</span><div class="merchant-sub">${c.net}</div></td>
+      <td><span class="badge ${prioClass[c.prio]}"><span class="dot"></span>${c.prio}</span></td>
+      <td><span class="badge ${statusClass[c.st]}"><span class="dot"></span>${c.st}</span></td>
+      <td class="right"><span class="risk-val">${fmt(c.risk)}</span></td>
+      <td class="right"><button class="link-btn" onclick="go('ops')">View Investigation</button></td>
+    </tr>`;
+    }).join("");
+  }
+
+  // Apply a freshly generated Investigation Object across the whole UI.
+  function applyInvestigation(inv){
+    currentInvestigation = inv;
+    window.currentInvestigation = inv;
+    // The lead dashboard case mirrors the live investigation — including the
+    // merchant, gateway and network, so the table reflects the chosen dataset.
+    cases[0].id            = inv.caseId;
+    cases[0].risk          = inv.revenueAtRisk;
+    cases[0].prio          = inv.priority;
+    cases[0].net           = inv.networksLabel;
+    cases[0].gw            = inv.gateway;
+    cases[0].merchantName  = inv.merchant;
+    cases[0].merchantCode  = inv.merchantCode;
+    cases[0].merchantColor = inv.merchantColor;
+    cases[0].merchantSub   = inv.merchantSub;
+    renderCasesTable();
+    bindInvestigation(inv);
+  }
+
+  /* ============================================================
+     LOAD A DATASET  (Dashboard selector + "Load Investigation")
+     fetch the JSON -> regenerate the Investigation Object ->
+     update Dashboard + Investigation Summary + Executive Report.
+     (Agent animations and agent workflow are intentionally untouched.)
+     ============================================================ */
+  async function loadDataset(key){
+    const ds = DATASETS[key];
+    if(!ds) return;
+    const btn = document.getElementById("loadInvestigationBtn");
+    const sel = document.getElementById("datasetSelect");
+    if(sel) sel.value = key;
+    if(btn) btn.disabled = true;
+    try {
+      // Single source of truth: prefer embedded records (so the app runs
+      // from file://), fall back to fetching the /data/*.json file.
+      const source = (window.DATASET_RECORDS && window.DATASET_RECORDS[key]) || ds.file;
+      const inv = await InvestigationEngine.investigate(source, ds.meta);
+      applyInvestigation(inv);
+    } catch (err) {
+      console.error("[PayResolve] Could not load dataset '" + key + "':", err);
+    } finally {
+      if(btn) btn.disabled = false;
+    }
+  }
+  window.loadDataset = loadDataset;
+
+  // Render the table immediately, then load the default dataset.
+  renderCasesTable();
+  loadDataset(document.getElementById("datasetSelect").value);
+
+  /* ============================================================
+     BIND THE INVESTIGATION OBJECT TO THE UI
+     Dashboard · Investigation Summary · Recommendation Panel ·
+     Executive Report all read from currentInvestigation instead of hardcoded text.
+     (Agent animations and conversations are intentionally untouched.)
+     ============================================================ */
+  const setText = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const setHTML = (id, v) => { const el = document.getElementById(id); if (el) el.innerHTML = v; };
+  const money   = n => "$" + Math.round(n).toLocaleString("en-US");
+  const badgeHTML = (text, cls) => `<span class="badge ${cls}"><span class="dot"></span>${text}</span>`;
+  const monthDay = d => d.toLocaleDateString("en-US", { month:"short", day:"numeric", year:"numeric" });
+
+  function bindInvestigation(inv){
+    // ----- Investigation Summary (Ops Center, left panel) -----
+    setText("invCaseSub", "Case " + inv.caseId);
+    const logo = document.getElementById("invMerchantLogo");
+    if (logo) { logo.textContent = inv.merchantCode; logo.style.background = inv.merchantColor; }
+    setText("invMerchant", inv.merchant);
+    setText("invGateway", inv.gateway + " — Live");
+    setText("invNetwork", inv.networksLabel);
+    setText("invAffected", inv.failedCount.toLocaleString("en-US") + " declines");
+    setText("invRisk", money(inv.revenueAtRisk));
+    setHTML("invPriority", badgeHTML(inv.priority, prioClass[inv.priority] || "b-gray"));
+
+    // ----- Ops Center subtitle -----
+    setText("opsSubtitle",
+      "Case " + inv.caseId + " · " + inv.merchant + " · " +
+      inv.classification + " (" + inv.dominantCode + ") spike on " + inv.gateway);
+
+    // ----- Recommendation Console -----
+    setText("recCaseSub", "Case " + inv.caseId + " · resolved by 5 agents");
+    setText("recConfidence", inv.confidence + "%");
+
+    // ----- Executive Report -----
+    setText("rpPageDesc", "Case " + inv.caseId + " · Generated for executive review · Confidential");
+    setText("rpTitle", inv.gateway + " " + inv.classification + " Spike — " + inv.merchant);
+    setText("rpCaseId", inv.caseId);
+    setText("rpMerchant", inv.merchant);
+    setText("rpGateway", inv.gateway + " (Live)");
+    setHTML("rpPriority", badgeHTML(inv.priority, prioClass[inv.priority] || "b-gray"));
+    setText("rpGenerated", monthDay(new Date()));
+    setText("rpMerchant2", inv.merchant);
+    setText("rpDeclineCount", inv.failedCount.toLocaleString("en-US"));
+    setText("rpGateway2", inv.gateway);
+    setText("rpNetwork2", inv.networks.join(" and "));
+    setText("rpClassMention", inv.dominantCode + " — " + inv.classification);
+    setText("rpRisk1", money(inv.revenueAtRisk));
+    setText("rpImpactRisk", money(inv.revenueAtRisk));
+    setText("rpImpactRiskSub", inv.failedCount.toLocaleString("en-US") + " declined auths");
+    // ----- Executive Report: Root Cause + Recommendation (narrative) -----
+    setText("rpRootCause", inv.rootCauseNarrative);
+    setText("rpTrigger", inv.confirmedTrigger);
+    setText("rpRecommendation", inv.recommendationNarrative);
+    setText("rpRecommendedAction", inv.recommendedAction);
+
+    // ----- Executive Report: Business Impact -----
+    setText("rpRecovered", money(inv.expectedRecovery));
+    setText("rpRecoveredSub", inv.recoveredPct + "% reprocessed");
+    setText("rpTTR", inv.timeToResolution);
+    setText("rpUnrecoverable", money(inv.unrecoverable));
+
+    // ----- Executive Report: Evidence Summary (rendered from the object) -----
+    renderEvidence(inv);
+
+    // ----- Ops Center: per-agent detail panels -----
+    bindAgentDetails(inv);
+
+    // ----- Dashboard aggregate stat cards (computed from case data) -----
+    const activeStatuses = ["Investigating", "Escalated", "In Review"];
+    const openCases  = cases.filter(c => c.st !== "Resolved");
+    const running    = cases.filter(c => activeStatuses.includes(c.st)).length;
+    const highPrio   = cases.filter(c => activeStatuses.includes(c.st) && (c.prio === "Critical" || c.prio === "High")).length;
+    const totalRisk  = cases.reduce((s, c) => s + c.risk, 0);
+    const fmtBig = n => n >= 1e6 ? "$" + (n/1e6).toFixed(2) + "M"
+                      : n >= 1e3 ? "$" + (n/1e3).toFixed(1) + "K"
+                      : money(n);
+    setText("statRunVal", running);
+    setText("statRunSub", highPrio + " high priority · " + (running - highPrio) + " routine");
+    setText("statRiskVal", fmtBig(totalRisk));
+    setText("statRiskSub", "Across " + openCases.length + " open cases");
+  }
+
+  // Evidence-row icons (kept identical to the original markup, indexed by row).
+  const EVIDENCE_ICONS = [
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 5-7"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg>',
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+  ];
+
+  // Render the Executive Report evidence list from the Investigation Object.
+  function renderEvidence(inv){
+    const wrap = document.getElementById("rpEvidence");
+    if (!wrap) return;
+    wrap.innerHTML = inv.evidence.map((e, i) => `
+      <div class="ev-item">
+        <span class="ev-ico">${EVIDENCE_ICONS[i] || EVIDENCE_ICONS[1]}</span>
+        <div class="ev-main"><div class="ev-t">${e.title}</div><div class="ev-d">${e.detail}</div></div>
+        <span class="badge ${e.badgeClass}"><span class="dot"></span>${e.badge}</span>
+      </div>`).join("");
+  }
+
+  // Bind the expandable per-agent detail panels (Ops Center) to the object.
+  function bindAgentDetails(inv){
+    const c = inv.agentConfidence;
+    const declines = inv.failedCount.toLocaleString("en-US");
+
+    // Manager
+    setText("agd-manager-inputs", "Case " + inv.caseId + " · " + declines + " declines");
+    setText("agd-manager-conf", c.manager + "%");
+
+    // Failure Classification
+    setText("agd-failure-code", inv.classificationSignal);
+    setText("agd-failure-inputs", declines + " declined authorizations");
+    setText("agd-failure-out", inv.declineType);
+    setText("agd-failure-conf", c.classification + "%");
+    setText("agd-failure-reason",
+      "Initial signal was ambiguous (" + inv.firstPassConfidence + "%); retry history confirmed a recurring "
+      + inv.classification + " pattern, raising confidence to " + inv.confidence + "%.");
+
+    // Root Cause
+    setText("agd-root-inputs", inv.declineType + " classification");
+    setText("agd-root-out", inv.rootCauseLabel);
+    setText("agd-root-conf", c.rootCause + "%");
+    setText("agd-root-reason", inv.confirmedTrigger);
+
+    // Recovery Strategy
+    setText("agd-recovery-inputs", "Root cause — " + inv.rootCauseLabel);
+    setText("agd-recovery-out", inv.recommendation);
+    setText("agd-recovery-conf", c.recovery + "%");
+    setText("agd-recovery-reason", inv.recommendationNarrative);
+
+    // Revenue Impact
+    setText("agd-revenue-inputs", "Recovery strategy — " + inv.recommendation);
+    setText("agd-revenue-out", money(inv.expectedRecovery) + " recoverable · " + inv.recoveryProbability + "% probability");
+    setText("agd-revenue-conf", c.revenue + "%");
+    setText("agd-revenue-reason",
+      "Recovery modeled on the 30-day retry-cohort success rate for matched "
+      + inv.declineType.toLowerCase() + " cases.");
+  }
+
+
+  // ---------- Navigation ----------
+  const screens = { dashboard:"Operations Dashboard", ops:"AI Operations Center", report:"Investigation Report" };
+  function go(name){
+    document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("screen-" + name).classList.add("active");
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    const nav = document.querySelector('.nav-item[data-screen="'+name+'"]');
+    if (nav) nav.classList.add("active");
+    document.getElementById("crumbCurrent").textContent = screens[name];
+    if (name === "ops" && window.startInvestigation) window.startInvestigation();
+    window.scrollTo({ top:0, behavior:"smooth" });
+  }
+  document.querySelectorAll(".nav-item[data-screen]").forEach(n =>
+    n.addEventListener("click", () => go(n.dataset.screen))
+  );
+
+  // dashboard filter chips (visual only)
+  document.querySelectorAll(".filters .chip").forEach(ch =>
+    ch.addEventListener("click", () => {
+      document.querySelectorAll(".filters .chip").forEach(c => c.classList.remove("active"));
+      ch.classList.add("active");
+    })
+  );
+
+  /* ============================================================
+     MULTI-AGENT ORCHESTRATION ENGINE  (Ops Center)
+     ============================================================ */
+  (function(){
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    const $ = id => document.getElementById(id);
+    let started = false;
+
+    const AGENTS = {
+      manager:  { name:"Manager Agent",     color:"#635bff", initials:"MA" },
+      failure:  { name:"Failure Agent",     color:"#4c8dff", initials:"FA" },
+      root:     { name:"Root Cause Agent",  color:"#e0a82e", initials:"RC" },
+      recovery: { name:"Recovery Agent",    color:"#2bb673", initials:"RV" },
+      revenue:  { name:"Revenue Agent",     color:"#9333ea", initials:"RI" }
+    };
+
+    function setState(id, state, text){
+      const card = $("ag-" + id); if(!card) return;
+      card.classList.remove("waiting","working","completed");
+      card.classList.add(state);
+      card.querySelector(".ag-state").textContent =
+        state === "working" ? "Working" : state === "completed" ? "Completed" : "Waiting";
+      if(text) $("st-" + id).textContent = text;
+    }
+
+    async function work(id, lines, interval){
+      interval = interval || 950;
+      setState(id, "working", lines[0]);
+      $("ag-" + id).scrollIntoView({ block:"nearest", behavior:"smooth" });
+      for(let i = 1; i < lines.length; i++){ await sleep(interval); $("st-" + id).textContent = lines[i]; }
+      await sleep(interval);
+    }
+
+    async function flow(idx){
+      const lk = $("lk-" + idx); if(!lk) return;
+      lk.classList.add("armed","flowing");
+      await sleep(1000);
+      lk.classList.remove("flowing");
+    }
+
+    function metric(id, k, v){
+      const el = $("res-" + id);
+      el.innerHTML += `<div class="ag-metric"><span class="mk">${k}</span><span class="mv" data-v>${v}</span></div>`;
+      $("ag-" + id).classList.add("show-result");
+      return el.querySelector(".ag-metric:last-child .mv");
+    }
+
+    function countUp(el, to, suffix, ms){
+      suffix = suffix || ""; ms = ms || 900;
+      const start = performance.now(), from = 0;
+      function tick(now){
+        const p = Math.min(1, (now - start) / ms);
+        const e = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(from + (to - from) * e) + suffix;
+        if(p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    }
+
+    async function steppedConfidence(el, steps, suffix, hold){
+      suffix = suffix || ""; hold = hold || 360;
+      for(const s of steps){ el.textContent = s + suffix; await sleep(hold); }
+    }
+
+    // ---- Decision Log ----
+    function addLog(time, text, sub){
+      const log = $("decisionLog");
+      const item = document.createElement("div");
+      item.className = "dlog-item";
+      item.innerHTML = `<div class="dlog-time">${time}</div>
+        <div class="dlog-rail"><div class="dlog-node"></div></div>
+        <div class="dlog-text">${text}${sub ? `<span class="dlog-sub">${sub}</span>` : ""}</div>`;
+      log.appendChild(item);
+      setTimeout(() => item.classList.add("done"), 650);
+      log.parentElement.scrollTop = log.parentElement.scrollHeight;
+    }
+
+    // ---- Conversation ----
+    function clock(min){ return "09:" + String(21 + min).padStart(2,"0"); }
+    async function say(agentKey, text, when){
+      const a = AGENTS[agentKey], stream = $("convStream");
+      // typing indicator
+      const typing = document.createElement("div");
+      typing.className = "conv-msg";
+      typing.innerHTML = `<div class="conv-av" style="background:${a.color}">${a.initials}</div>
+        <div class="conv-bubble"><div class="conv-meta"><span class="conv-who">${a.name}</span></div>
+        <div class="conv-body"><span class="conv-typing"><span></span><span></span><span></span></span></div></div>`;
+      stream.appendChild(typing);
+      stream.parentElement.scrollTop = stream.parentElement.scrollHeight;
+      await sleep(750);
+      typing.querySelector(".conv-body").innerHTML = text;
+      typing.querySelector(".conv-meta").innerHTML =
+        `<span class="conv-who">${a.name}</span><span class="conv-when">${when}</span>`;
+      stream.parentElement.scrollTop = stream.parentElement.scrollHeight;
+      await sleep(420);
+    }
+
+    // ---- Investigation progress tracker ----
+    function setStage(idx){
+      document.querySelectorAll("#investProgress .ip-step").forEach((el,i) => {
+        el.classList.remove("active","done");
+        if(i < idx) el.classList.add("done");
+        else if(i === idx) el.classList.add("active");
+      });
+      document.querySelectorAll("#investProgress .ip-line").forEach((el,i) =>
+        el.classList.toggle("filled", i < idx));
+    }
+    function finishStages(){
+      document.querySelectorAll("#investProgress .ip-step").forEach(el => { el.classList.remove("active"); el.classList.add("done"); });
+      document.querySelectorAll("#investProgress .ip-line").forEach(el => el.classList.add("filled"));
+    }
+
+    function moneyUp(el, to, ms){
+      const start = performance.now();
+      (function f(now){
+        const p = Math.min(1, (now - start) / ms), e = 1 - Math.pow(1 - p, 3);
+        el.textContent = "$" + Math.round(to * e).toLocaleString("en-US");
+        if(p < 1) requestAnimationFrame(f);
+      })(performance.now());
+    }
+
+    // ---- Recommendation Console ----
+    function revealRecommendation(secs){
+      finishStages();
+      $("recPending").style.display = "none";
+      $("recReady").classList.add("show");
+      if(secs && $("recDuration")) $("recDuration").textContent = secs + "s";
+    }
+    window.recAction = function(btn, msg){
+      const row = btn.parentElement;
+      row.querySelectorAll(".btn").forEach(b => b.classList.remove("sel"));
+      btn.classList.add("sel");
+      addLog(clock(4), msg, "Operator: Devyani Kulkarni");
+    };
+
+    // ---- Agent detail expand / collapse (inline, no popup) ----
+    document.querySelectorAll("#agentCanvas .agent-card").forEach(card => {
+      card.addEventListener("click", () => card.classList.toggle("expanded"));
+    });
+
+    // ---- Main sequence ----
+    async function run(){
+      const t0 = performance.now();
+
+      // SINGLE SOURCE OF TRUTH — every value rendered below comes from this object.
+      const I = currentInvestigation;
+      if(!I){ return; }
+      const fp = I.firstPassConfidence, conf = I.confidence;
+      const lo = Math.max(1, fp - 11), lo2 = Math.max(1, fp - 4);
+      const mid = Math.round(fp + (conf - fp) / 2);
+
+      // ===== Stage 0 — Planning : Manager opens & supervises =====
+      setStage(0);
+      await work("manager", ["Creating investigation...", I.failedCount.toLocaleString("en-US") + " related failures detected.", "Assigning Failure Classification Agent."], 850);
+      addLog(clock(0), "Investigation Created", "Case " + I.caseId + " \u00b7 " + I.merchant);
+      await say("manager", '<span class="mention">@classification</span> investigate issuer decline.', clock(0));
+      setState("manager", "completed", "Assigned Failure Agent");
+      await flow(0);
+
+      // ===== Stage 1 — Classification (first pass: low confidence) =====
+      setStage(1);
+      await work("failure", ["Reading decline code...", "Checking gateway response...", "Inspecting issuer message..."], 800);
+      const cf = metric("failure", "Confidence", fp + "%");
+      await steppedConfidence(cf, [lo, lo2, fp], "%", 300);
+      cf.style.color = "#f0c462";
+      await say("failure", I.classificationSignal + ". Confidence only " + fp + "%.", clock(1));
+
+      // ----- Manager: below threshold, requests more evidence -----
+      setState("manager", "working", "Reviewing classification...");
+      await sleep(650);
+      await say("manager", "Need stronger evidence.", clock(1));
+      addLog(clock(1), "Confidence Below Threshold", fp + "% \u2014 under 90% threshold");
+      addLog(clock(1), "Additional Evidence Requested", "Manager \u2192 Failure Agent");
+      setState("manager", "completed", "Requested more evidence");
+
+      // ----- Failure agent re-checks; confidence evolves 72 -> 94 -----
+      await work("failure", ["Checking retry history...", "Correlating decline cohort..."], 780);
+      await steppedConfidence(cf, [fp, mid, conf], "%", 360);
+      cf.style.color = "#4dd699";
+      setState("failure", "completed", "Classification Complete");
+      await say("failure", "Retry history confirms pattern. Confidence increased to " + conf + "%.", clock(1));
+
+      // ----- Manager accepts and proceeds -----
+      setState("manager", "working", "Confidence improved...");
+      await sleep(600);
+      await say("manager", "Confidence improved. Proceed.", clock(1));
+      addLog(clock(1), "Confidence Accepted", "Classification confirmed at " + conf + "%");
+      setState("manager", "completed", "Delegated Root Cause");
+      await flow(1);
+
+      // ===== Stage 2 — Diagnosis =====
+      setStage(2);
+      await work("root", ["Reviewing issuer response...", "Checking merchant configuration..."], 800);
+      metric("root", "Root Cause", I.rootCauseLabel).style.color = "#f0c462";
+      setState("root", "completed", "Root Cause Found");
+      await say("root", "Root cause confirmed: " + I.rootCauseLabel + ".", clock(2));
+
+      setState("manager", "working", "Recovery analysis required...");
+      await sleep(550);
+      await say("manager", "Recovery strategy required.", clock(2));
+      setState("manager", "completed", "Delegated Recovery");
+      await flow(2);
+
+      // ===== Stage 3 — Recovery =====
+      setStage(3);
+      await work("recovery", ["Evaluating retry strategy...", "Checking smart-retry policy..."], 800);
+      metric("recovery", "Recommendation", I.recommendation);
+      setState("recovery", "completed", "Recommendation Ready");
+      await say("recovery", I.recoveryNarrative, clock(3));
+
+      setState("manager", "working", "Revenue impact required...");
+      await sleep(550);
+      await say("manager", "Need revenue impact.", clock(3));
+      setState("manager", "completed", "Delegated Revenue");
+      await flow(3);
+
+      // ===== Stage 4 — Business Impact =====
+      setStage(4);
+      await work("revenue", ["Modeling recoverable revenue...", "Estimating retry success..."], 800);
+      const rp = metric("revenue", "Recovery Probability", "0%");
+      const er = metric("revenue", "Expected Recovery", "$0");
+      countUp(rp, I.recoveryProbability, "%", 950);
+      moneyUp(er, I.expectedRecovery, 1050);
+      await sleep(1150);
+      setState("revenue", "completed", "Business Impact Calculated");
+      await say("revenue", "Expected recovery " + I.recoveryProbability + "%.", clock(3));
+
+      // ----- Manager approves recovery -----
+      setState("manager", "working", "Approving recovery plan...");
+      await sleep(600);
+      await say("manager", "Recovery approved.", clock(3));
+      addLog(clock(3), "Recovery Approved", I.recommendation + " · " + I.recoveryProbability + "% expected recovery");
+      setState("manager", "completed", "Recovery approved");
+
+      // ===== Stage 5 — Executive Summary =====
+      setStage(5);
+      await work("manager", ["Generating executive summary...", "Investigation complete."], 800);
+      setState("manager", "completed", "Investigation Complete");
+      await say("manager", "Executive summary ready.", clock(3));
+      addLog(clock(3), "Executive Summary Generated", "Ready for operator review");
+
+      const secs = Math.max(1, Math.round((performance.now() - t0) / 1000));
+      revealRecommendation(secs);
+    }
+
+    window.startInvestigation = function(){
+      if(started) return; started = true;
+      setTimeout(run, 500);
+    };
+  })();
+
+</script>
+</body>
+</html>
