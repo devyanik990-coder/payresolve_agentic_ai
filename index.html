@@ -987,6 +987,7 @@
 
 <script src="datasets.js"></script>
 <script src="investigationEngine.js"></script>
+<script src="agentReasoning.js"></script>
 <script>
   // ---------- Realistic case data ----------
   const merchants = [
@@ -1476,30 +1477,37 @@
     }
 
     // ---- Main sequence (cancellable via the runId generation token) ----
+    // The conversation is GENERATED from the Investigation Object by
+    // AgentReasoning.build(); run() only animates whatever it produced,
+    // so every dataset yields a different collaborative reasoning process.
     async function run(myId){
       const alive = () => myId === runId;
       const t0 = performance.now();
 
-      // SINGLE SOURCE OF TRUTH — every value below comes from this object.
       const I = currentInvestigation;
       if(!I) return;
+      const R = (window.AgentReasoning && window.AgentReasoning.build)
+                ? window.AgentReasoning.build(I) : null;
+      if(!R) return;
+
       const fp = I.firstPassConfidence, conf = I.confidence;
       const lo = Math.max(1, fp - 11), lo2 = Math.max(1, fp - 4);
       const mid = Math.round(fp + (conf - fp) / 2);
-      const money = n => "$" + Math.round(n).toLocaleString("en-US");
-      const netLabel = I.networksLabel || (I.networks || []).join(" · ");
 
-      // ===== Stage 0 — Planning : Manager opens & supervises =====
+      // ===== Stage 0 - Planning : Manager scopes & delegates =====
       setStage(0);
-      await work("manager", ["Creating investigation...", I.failedCount.toLocaleString("en-US") + " related failures detected on " + I.gateway + ".", "Assigning Failure Classification Agent."], 850);
+      await work("manager", ["Opening investigation...", I.failedCount.toLocaleString("en-US") + " failures on " + I.gateway + " (" + (I.networksLabel || I.networks.join(" · ")) + ").", "Setting priority and a plan..."], 820);
       if(!alive()) return;
-      addLog(clock(0), "Investigation Created", "Case " + I.caseId + " · " + I.merchant);
-      await say("manager", '<span class="mention">@classification</span> triage the ' + I.gateway + ' decline spike on ' + netLabel + '.', clock(0));
+      metric("manager", "Priority", R.priorityShort);
+      addLog(clock(0), "Investigation Created", "Case " + I.caseId + " · " + I.merchant + " · " + R.priority);
+      await say("manager", R.planFocus, clock(0));
       if(!alive()) return;
-      setState("manager", "completed", "Assigned Failure Agent");
+      await say("manager", R.delegateClass, clock(0));
+      if(!alive()) return;
+      setState("manager", "completed", "Plan set · delegated Classification");
       await flow(0); if(!alive()) return;
 
-      // ===== Stage 1 — Classification (first pass: low confidence) =====
+      // ===== Stage 1 - Classification (first pass low, then evidence) =====
       setStage(1);
       await work("failure", ["Reading decline code " + I.dominantCode + "...", "Checking " + I.gateway + " response...", "Inspecting issuer message..."], 800);
       if(!alive()) return;
@@ -1507,72 +1515,67 @@
       await steppedConfidence(cf, [lo, lo2, fp], "%", 300);
       if(!alive()) return;
       cf.style.color = "#f0c462";
-      await say("failure", I.classificationSignal + " — reads as " + I.classification + " (" + I.declineType + "). Confidence only " + fp + "%.", clock(1));
+      await say("failure", R.classWhy + " Confidence only " + fp + "% so far.", clock(1));
       if(!alive()) return;
 
-      // ----- Manager: below threshold, requests more evidence -----
       setState("manager", "working", "Reviewing classification...");
-      await sleep(650); if(!alive()) return;
-      await say("manager", "That's below our 90% bar. Pull retry history before we commit.", clock(1));
+      await sleep(640); if(!alive()) return;
+      await say("manager", R.managerLowConf, clock(1));
       if(!alive()) return;
       addLog(clock(1), "Confidence Below Threshold", fp + "% — under 90% threshold");
-      addLog(clock(1), "Additional Evidence Requested", "Manager → Failure Agent");
+      addLog(clock(1), "Additional Evidence Requested", "Manager → Classification Agent");
       setState("manager", "completed", "Requested more evidence");
 
-      // ----- Failure agent re-checks; confidence evolves -----
-      await work("failure", ["Checking retry history...", "Correlating " + I.dominantCount.toLocaleString("en-US") + "-decline cohort on code " + I.dominantCode + "..."], 780);
+      await work("failure", ["Correlating retry history...", "Mapping the " + I.dominantCount.toLocaleString("en-US") + "-decline cohort on code " + I.dominantCode + "..."], 760);
       if(!alive()) return;
-      await steppedConfidence(cf, [fp, mid, conf], "%", 360);
+      await steppedConfidence(cf, [fp, mid, conf], "%", 350);
       if(!alive()) return;
       cf.style.color = "#4dd699";
       setState("failure", "completed", "Classification Complete");
-      await say("failure", "Code " + I.dominantCode + " concentrates on " + conf + "% of failures. Confirmed " + I.classification + " — confidence now " + conf + "%.", clock(1));
+      await say("failure", R.classRaised, clock(1));
       if(!alive()) return;
 
-      // ----- Manager accepts and proceeds -----
       setState("manager", "working", "Confidence improved...");
-      await sleep(600); if(!alive()) return;
-      await say("manager", "Confirmed at " + conf + "%. <span class=\"mention\">@rootcause</span> take it.", clock(1));
+      await sleep(580); if(!alive()) return;
+      await say("manager", R.managerAfterClass, clock(1));
       if(!alive()) return;
-      addLog(clock(1), "Confidence Accepted", "Classification confirmed at " + conf + "%");
+      addLog(clock(1), "Confidence Accepted", I.classification + " confirmed at " + conf + "%");
       setState("manager", "completed", "Delegated Root Cause");
       await flow(1); if(!alive()) return;
 
-      // ===== Stage 2 — Diagnosis =====
+      // ===== Stage 2 - Root Cause (builds on Classification) =====
       setStage(2);
-      await work("root", ["Reviewing issuer response...", "Auth rate " + I.baselineAuthRate + "% → " + I.degradedAuthRate + "%...", "Checking merchant configuration..."], 800);
+      await work("root", ["Reviewing Classification's finding...", "Checking " + I.gateway + " behaviour & auth-rate drop...", "Isolating the cause..."], 800);
       if(!alive()) return;
       metric("root", "Root Cause", I.rootCauseLabel).style.color = "#f0c462";
       setState("root", "completed", "Root Cause Found");
-      await say("root", I.confirmedTrigger, clock(2));
-      if(!alive()) return;
+      for(const line of R.rootLines){ await say("root", line, clock(2)); if(!alive()) return; }
 
       setState("manager", "working", "Recovery analysis required...");
-      await sleep(550); if(!alive()) return;
-      await say("manager", '<span class="mention">@recovery</span> what is the best path to recover these?', clock(2));
+      await sleep(540); if(!alive()) return;
+      await say("manager", R.managerAfterRoot, clock(2));
       if(!alive()) return;
       setState("manager", "completed", "Delegated Recovery");
       await flow(2); if(!alive()) return;
 
-      // ===== Stage 3 — Recovery =====
+      // ===== Stage 3 - Recovery (builds on Root Cause; trade-offs) =====
       setStage(3);
-      await work("recovery", ["Evaluating recovery options...", "Weighing trade-offs for " + I.classification + "..."], 800);
+      await work("recovery", ["Reviewing root cause " + I.rootCauseLabel + "...", "Weighing recovery options & trade-offs..."], 800);
       if(!alive()) return;
       metric("recovery", "Recommendation", I.recommendation);
       setState("recovery", "completed", "Recommendation Ready");
-      await say("recovery", I.recoveryNarrative + " Recommended action: " + I.recommendation + ".", clock(3));
-      if(!alive()) return;
+      for(const line of R.recoveryLines){ await say("recovery", line, clock(3)); if(!alive()) return; }
 
       setState("manager", "working", "Revenue impact required...");
-      await sleep(550); if(!alive()) return;
-      await say("manager", '<span class="mention">@revenue</span> size the recoverable revenue.', clock(3));
+      await sleep(540); if(!alive()) return;
+      await say("manager", R.managerAfterRecovery, clock(3));
       if(!alive()) return;
       setState("manager", "completed", "Delegated Revenue");
       await flow(3); if(!alive()) return;
 
-      // ===== Stage 4 — Business Impact =====
+      // ===== Stage 4 - Revenue (builds on Recovery; sizes impact) =====
       setStage(4);
-      await work("revenue", ["Modeling recoverable revenue from " + money(I.revenueAtRisk) + "...", "Estimating retry success..."], 800);
+      await work("revenue", ["Modeling recoverable revenue from " + ("$" + Math.round(I.revenueAtRisk).toLocaleString("en-US")) + "...", "Estimating retry success on the cohort..."], 800);
       if(!alive()) return;
       const rp = metric("revenue", "Recovery Probability", "0%");
       const er = metric("revenue", "Expected Recovery", "$0");
@@ -1580,25 +1583,28 @@
       moneyUp(er, I.expectedRecovery, 1050);
       await sleep(1150); if(!alive()) return;
       setState("revenue", "completed", "Business Impact Calculated");
-      await say("revenue", "Of " + money(I.revenueAtRisk) + " at risk, ~" + I.recoveryProbability + "% is recoverable — about " + money(I.expectedRecovery) + ".", clock(3));
+      await say("revenue", R.revenueLine, clock(3));
+      if(!alive()) return;
+      await say("revenue", R.revenueOpportunity, clock(3));
       if(!alive()) return;
 
-      // ----- Manager approves recovery -----
       setState("manager", "working", "Approving recovery plan...");
-      await sleep(600); if(!alive()) return;
-      await say("manager", "Plan approved — " + I.recommendation + ". Generating executive summary.", clock(3));
+      await sleep(580); if(!alive()) return;
+      await say("manager", R.managerApprove, clock(3));
       if(!alive()) return;
       addLog(clock(3), "Recovery Approved", I.recommendation + " · " + I.recoveryProbability + "% expected recovery");
       setState("manager", "completed", "Recovery approved");
 
-      // ===== Stage 5 — Executive Summary =====
+      // ===== Stage 5 - Executive Summary (synthesises the chain) =====
       setStage(5);
-      await work("manager", ["Generating executive summary...", "Investigation complete."], 800);
+      await work("manager", ["Synthesising the team's findings...", "Drafting executive summary..."], 800);
       if(!alive()) return;
       setState("manager", "completed", "Investigation Complete");
-      await say("manager", "Executive summary ready for " + I.merchant + ". Recommend: " + I.recommendedAction + ".", clock(3));
+      await say("manager", R.execSummary, clock(3));
       if(!alive()) return;
-      addLog(clock(3), "Executive Summary Generated", "Ready for operator review");
+      await say("manager", R.execNext, clock(3));
+      if(!alive()) return;
+      addLog(clock(3), "Executive Summary Generated", R.priorityShort + " · " + I.recommendation);
 
       const secs = Math.max(1, Math.round((performance.now() - t0) / 1000));
       revealRecommendation(secs);
@@ -1612,7 +1618,7 @@
       setTimeout(() => { if(myId === runId) run(myId); }, 350);
     }
 
-    /* PUBLIC API — the workspace is driven entirely by the Investigation Object.
+    /* PUBLIC API - the workspace is driven entirely by the Investigation Object.
        applyInvestigation() -> refreshWorkspace() on every dataset load. */
     window.refreshWorkspace = function(){
       if(onOps){
@@ -1624,8 +1630,6 @@
         pending = true;            // animate the next time the workspace opens
       }
     };
-
-    // go() calls these when the Multi-Agent Workspace screen is shown / hidden.
     window.onOpsEnter = function(){
       onOps = true;
       if(pending){ pending = false; startRun(); }
