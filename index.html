@@ -1111,6 +1111,8 @@
     cases[0].merchantSub   = inv.merchantSub;
     renderCasesTable();
     bindInvestigation(inv);
+    // Drive the animated half of the app from the SAME object.
+    if (window.refreshWorkspace) window.refreshWorkspace();
   }
 
   /* ============================================================
@@ -1295,7 +1297,8 @@
     const nav = document.querySelector('.nav-item[data-screen="'+name+'"]');
     if (nav) nav.classList.add("active");
     document.getElementById("crumbCurrent").textContent = screens[name];
-    if (name === "ops" && window.startInvestigation) window.startInvestigation();
+    if (name === "ops") { if (window.onOpsEnter) window.onOpsEnter(); }
+    else if (window.onOpsLeave) window.onOpsLeave();
     window.scrollTo({ top:0, behavior:"smooth" });
   }
   document.querySelectorAll(".nav-item[data-screen]").forEach(n =>
@@ -1316,7 +1319,7 @@
   (function(){
     const sleep = ms => new Promise(r => setTimeout(r, ms));
     const $ = id => document.getElementById(id);
-    let started = false;
+    let runId = 0, pending = false, onOps = false;
 
     const AGENTS = {
       manager:  { name:"Manager Agent",     color:"#635bff", initials:"MA" },
@@ -1337,9 +1340,10 @@
 
     async function work(id, lines, interval){
       interval = interval || 950;
+      const myId = runId;
       setState(id, "working", lines[0]);
       $("ag-" + id).scrollIntoView({ block:"nearest", behavior:"smooth" });
-      for(let i = 1; i < lines.length; i++){ await sleep(interval); $("st-" + id).textContent = lines[i]; }
+      for(let i = 1; i < lines.length; i++){ await sleep(interval); if(myId !== runId) return; $("st-" + id).textContent = lines[i]; }
       await sleep(interval);
     }
 
@@ -1450,115 +1454,183 @@
       card.addEventListener("click", () => card.classList.toggle("expanded"));
     });
 
-    // ---- Main sequence ----
-    async function run(){
+    // ---- Reset the workspace to its idle state (discard previous investigation) ----
+    function resetWorkspace(){
+      const cs = $("convStream"); if(cs) cs.innerHTML = "";
+      const dl = $("decisionLog"); if(dl) dl.innerHTML = "";
+      Object.keys(AGENTS).forEach(id => {
+        const res = $("res-" + id); if(res) res.innerHTML = "";
+        const card = $("ag-" + id);
+        if(card){
+          card.classList.remove("working","completed","show-result","expanded");
+          card.classList.add("waiting");
+          const stateEl = card.querySelector(".ag-state"); if(stateEl) stateEl.textContent = "Waiting";
+        }
+        const st = $("st-" + id); if(st) st.textContent = (id === "manager") ? "Planning Investigation" : "Waiting";
+      });
+      document.querySelectorAll("#investProgress .ip-step").forEach(el => el.classList.remove("active","done"));
+      document.querySelectorAll("#investProgress .ip-line").forEach(el => el.classList.remove("filled"));
+      document.querySelectorAll("#agentCanvas .agent-link").forEach(el => el.classList.remove("armed","flowing"));
+      const rr = $("recReady"); if(rr) rr.classList.remove("show");
+      const rp = $("recPending"); if(rp) rp.style.display = "";
+    }
+
+    // ---- Main sequence (cancellable via the runId generation token) ----
+    async function run(myId){
+      const alive = () => myId === runId;
       const t0 = performance.now();
 
-      // SINGLE SOURCE OF TRUTH — every value rendered below comes from this object.
+      // SINGLE SOURCE OF TRUTH — every value below comes from this object.
       const I = currentInvestigation;
-      if(!I){ return; }
+      if(!I) return;
       const fp = I.firstPassConfidence, conf = I.confidence;
       const lo = Math.max(1, fp - 11), lo2 = Math.max(1, fp - 4);
       const mid = Math.round(fp + (conf - fp) / 2);
+      const money = n => "$" + Math.round(n).toLocaleString("en-US");
+      const netLabel = I.networksLabel || (I.networks || []).join(" · ");
 
       // ===== Stage 0 — Planning : Manager opens & supervises =====
       setStage(0);
-      await work("manager", ["Creating investigation...", I.failedCount.toLocaleString("en-US") + " related failures detected.", "Assigning Failure Classification Agent."], 850);
-      addLog(clock(0), "Investigation Created", "Case " + I.caseId + " \u00b7 " + I.merchant);
-      await say("manager", '<span class="mention">@classification</span> investigate issuer decline.', clock(0));
+      await work("manager", ["Creating investigation...", I.failedCount.toLocaleString("en-US") + " related failures detected on " + I.gateway + ".", "Assigning Failure Classification Agent."], 850);
+      if(!alive()) return;
+      addLog(clock(0), "Investigation Created", "Case " + I.caseId + " · " + I.merchant);
+      await say("manager", '<span class="mention">@classification</span> triage the ' + I.gateway + ' decline spike on ' + netLabel + '.', clock(0));
+      if(!alive()) return;
       setState("manager", "completed", "Assigned Failure Agent");
-      await flow(0);
+      await flow(0); if(!alive()) return;
 
       // ===== Stage 1 — Classification (first pass: low confidence) =====
       setStage(1);
-      await work("failure", ["Reading decline code...", "Checking gateway response...", "Inspecting issuer message..."], 800);
+      await work("failure", ["Reading decline code " + I.dominantCode + "...", "Checking " + I.gateway + " response...", "Inspecting issuer message..."], 800);
+      if(!alive()) return;
       const cf = metric("failure", "Confidence", fp + "%");
       await steppedConfidence(cf, [lo, lo2, fp], "%", 300);
+      if(!alive()) return;
       cf.style.color = "#f0c462";
-      await say("failure", I.classificationSignal + ". Confidence only " + fp + "%.", clock(1));
+      await say("failure", I.classificationSignal + " — reads as " + I.classification + " (" + I.declineType + "). Confidence only " + fp + "%.", clock(1));
+      if(!alive()) return;
 
       // ----- Manager: below threshold, requests more evidence -----
       setState("manager", "working", "Reviewing classification...");
-      await sleep(650);
-      await say("manager", "Need stronger evidence.", clock(1));
-      addLog(clock(1), "Confidence Below Threshold", fp + "% \u2014 under 90% threshold");
-      addLog(clock(1), "Additional Evidence Requested", "Manager \u2192 Failure Agent");
+      await sleep(650); if(!alive()) return;
+      await say("manager", "That's below our 90% bar. Pull retry history before we commit.", clock(1));
+      if(!alive()) return;
+      addLog(clock(1), "Confidence Below Threshold", fp + "% — under 90% threshold");
+      addLog(clock(1), "Additional Evidence Requested", "Manager → Failure Agent");
       setState("manager", "completed", "Requested more evidence");
 
-      // ----- Failure agent re-checks; confidence evolves 72 -> 94 -----
-      await work("failure", ["Checking retry history...", "Correlating decline cohort..."], 780);
+      // ----- Failure agent re-checks; confidence evolves -----
+      await work("failure", ["Checking retry history...", "Correlating " + I.dominantCount.toLocaleString("en-US") + "-decline cohort on code " + I.dominantCode + "..."], 780);
+      if(!alive()) return;
       await steppedConfidence(cf, [fp, mid, conf], "%", 360);
+      if(!alive()) return;
       cf.style.color = "#4dd699";
       setState("failure", "completed", "Classification Complete");
-      await say("failure", "Retry history confirms pattern. Confidence increased to " + conf + "%.", clock(1));
+      await say("failure", "Code " + I.dominantCode + " concentrates on " + conf + "% of failures. Confirmed " + I.classification + " — confidence now " + conf + "%.", clock(1));
+      if(!alive()) return;
 
       // ----- Manager accepts and proceeds -----
       setState("manager", "working", "Confidence improved...");
-      await sleep(600);
-      await say("manager", "Confidence improved. Proceed.", clock(1));
+      await sleep(600); if(!alive()) return;
+      await say("manager", "Confirmed at " + conf + "%. <span class=\"mention\">@rootcause</span> take it.", clock(1));
+      if(!alive()) return;
       addLog(clock(1), "Confidence Accepted", "Classification confirmed at " + conf + "%");
       setState("manager", "completed", "Delegated Root Cause");
-      await flow(1);
+      await flow(1); if(!alive()) return;
 
       // ===== Stage 2 — Diagnosis =====
       setStage(2);
-      await work("root", ["Reviewing issuer response...", "Checking merchant configuration..."], 800);
+      await work("root", ["Reviewing issuer response...", "Auth rate " + I.baselineAuthRate + "% → " + I.degradedAuthRate + "%...", "Checking merchant configuration..."], 800);
+      if(!alive()) return;
       metric("root", "Root Cause", I.rootCauseLabel).style.color = "#f0c462";
       setState("root", "completed", "Root Cause Found");
-      await say("root", "Root cause confirmed: " + I.rootCauseLabel + ".", clock(2));
+      await say("root", I.confirmedTrigger, clock(2));
+      if(!alive()) return;
 
       setState("manager", "working", "Recovery analysis required...");
-      await sleep(550);
-      await say("manager", "Recovery strategy required.", clock(2));
+      await sleep(550); if(!alive()) return;
+      await say("manager", '<span class="mention">@recovery</span> what is the best path to recover these?', clock(2));
+      if(!alive()) return;
       setState("manager", "completed", "Delegated Recovery");
-      await flow(2);
+      await flow(2); if(!alive()) return;
 
       // ===== Stage 3 — Recovery =====
       setStage(3);
-      await work("recovery", ["Evaluating retry strategy...", "Checking smart-retry policy..."], 800);
+      await work("recovery", ["Evaluating recovery options...", "Weighing trade-offs for " + I.classification + "..."], 800);
+      if(!alive()) return;
       metric("recovery", "Recommendation", I.recommendation);
       setState("recovery", "completed", "Recommendation Ready");
-      await say("recovery", I.recoveryNarrative, clock(3));
+      await say("recovery", I.recoveryNarrative + " Recommended action: " + I.recommendation + ".", clock(3));
+      if(!alive()) return;
 
       setState("manager", "working", "Revenue impact required...");
-      await sleep(550);
-      await say("manager", "Need revenue impact.", clock(3));
+      await sleep(550); if(!alive()) return;
+      await say("manager", '<span class="mention">@revenue</span> size the recoverable revenue.', clock(3));
+      if(!alive()) return;
       setState("manager", "completed", "Delegated Revenue");
-      await flow(3);
+      await flow(3); if(!alive()) return;
 
       // ===== Stage 4 — Business Impact =====
       setStage(4);
-      await work("revenue", ["Modeling recoverable revenue...", "Estimating retry success..."], 800);
+      await work("revenue", ["Modeling recoverable revenue from " + money(I.revenueAtRisk) + "...", "Estimating retry success..."], 800);
+      if(!alive()) return;
       const rp = metric("revenue", "Recovery Probability", "0%");
       const er = metric("revenue", "Expected Recovery", "$0");
       countUp(rp, I.recoveryProbability, "%", 950);
       moneyUp(er, I.expectedRecovery, 1050);
-      await sleep(1150);
+      await sleep(1150); if(!alive()) return;
       setState("revenue", "completed", "Business Impact Calculated");
-      await say("revenue", "Expected recovery " + I.recoveryProbability + "%.", clock(3));
+      await say("revenue", "Of " + money(I.revenueAtRisk) + " at risk, ~" + I.recoveryProbability + "% is recoverable — about " + money(I.expectedRecovery) + ".", clock(3));
+      if(!alive()) return;
 
       // ----- Manager approves recovery -----
       setState("manager", "working", "Approving recovery plan...");
-      await sleep(600);
-      await say("manager", "Recovery approved.", clock(3));
+      await sleep(600); if(!alive()) return;
+      await say("manager", "Plan approved — " + I.recommendation + ". Generating executive summary.", clock(3));
+      if(!alive()) return;
       addLog(clock(3), "Recovery Approved", I.recommendation + " · " + I.recoveryProbability + "% expected recovery");
       setState("manager", "completed", "Recovery approved");
 
       // ===== Stage 5 — Executive Summary =====
       setStage(5);
       await work("manager", ["Generating executive summary...", "Investigation complete."], 800);
+      if(!alive()) return;
       setState("manager", "completed", "Investigation Complete");
-      await say("manager", "Executive summary ready.", clock(3));
+      await say("manager", "Executive summary ready for " + I.merchant + ". Recommend: " + I.recommendedAction + ".", clock(3));
+      if(!alive()) return;
       addLog(clock(3), "Executive Summary Generated", "Ready for operator review");
 
       const secs = Math.max(1, Math.round((performance.now() - t0) / 1000));
       revealRecommendation(secs);
     }
 
-    window.startInvestigation = function(){
-      if(started) return; started = true;
-      setTimeout(run, 500);
+    // ---- Start a fresh run, cancelling any in-flight one ----
+    function startRun(){
+      runId++;                     // invalidate any in-flight run
+      const myId = runId;
+      resetWorkspace();            // never carry stale data into a new run
+      setTimeout(() => { if(myId === runId) run(myId); }, 350);
+    }
+
+    /* PUBLIC API — the workspace is driven entirely by the Investigation Object.
+       applyInvestigation() -> refreshWorkspace() on every dataset load. */
+    window.refreshWorkspace = function(){
+      if(onOps){
+        pending = false;
+        startRun();                // already viewing the workspace -> replay now
+      } else {
+        runId++;                   // cancel any in-flight run
+        resetWorkspace();          // clear to idle so nothing stale lingers
+        pending = true;            // animate the next time the workspace opens
+      }
     };
+
+    // go() calls these when the Multi-Agent Workspace screen is shown / hidden.
+    window.onOpsEnter = function(){
+      onOps = true;
+      if(pending){ pending = false; startRun(); }
+    };
+    window.onOpsLeave = function(){ onOps = false; };
   })();
 
 </script>
