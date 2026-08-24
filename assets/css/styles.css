@@ -1,0 +1,1345 @@
+/*
+  =====================================================================
+  PayResolve AI — styles.css
+  Phase 2.2 — Application Shell (static structural styling only)
+  ---------------------------------------------------------------------
+  Purpose:
+    Clean, professional, desktop-first styling for the application
+    shell: header, main workspace (left/center/right panels) and the
+    secondary Archive area. Communicates the information hierarchy and
+    reserves responsive space so future modules integrate without
+    redesign.
+  Referenced documentation:
+    PRD §20 (desktop-first; Chrome/Edge/Safari); FS-01 §2/§3;
+    Implementation Blueprint v1.1 §2, §7.
+  NOTE: Presentation/layout only. No component styling tied to real
+  data, no behaviour, no hardcoded investigation content.
+  =====================================================================
+*/
+
+/* ------------------------- Design tokens ------------------------- */
+:root {
+  --color-bg: #eef1f5;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f7f9fc;
+  --color-header: #0f2540;
+  --color-header-accent: #1f4e79;
+  --color-border: #d8dee9;
+  --color-text: #1c2733;
+  --color-text-muted: #5b6b7c;
+  --color-tag-bg: #eaf1f9;
+  --color-tag-text: #1f4e79;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius: 8px;
+  --shadow: 0 1px 2px rgba(15, 37, 64, 0.06), 0 2px 8px rgba(15, 37, 64, 0.05);
+  --font: "Segoe UI", Roboto, "Helvetica Neue", Arial, system-ui, sans-serif;
+}
+
+/* ------------------------- Base ------------------------- */
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Root shell: header -> workspace -> secondary, full viewport height */
+#app-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ------------------------- Header ------------------------- */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  background: linear-gradient(90deg, var(--color-header), var(--color-header-accent));
+  color: #ffffff;
+  box-shadow: var(--shadow);
+}
+
+.app-header__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.app-header__logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.app-header__titles { line-height: 1.2; }
+
+.app-header__title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: 0.2px;
+}
+
+.app-header__subtitle {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.app-header__meta {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.72);
+  white-space: nowrap;
+}
+
+/* ------------------------- Main workspace ------------------------- */
+.workspace {
+  flex: 1 1 auto;
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(360px, 1.7fr) minmax(260px, 1fr);
+  gap: var(--space-5);
+  padding: var(--space-5) var(--space-6);
+  align-items: start;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.panel__label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted);
+}
+
+/* ------------------------- Region (placeholder card) ------------------------- */
+.region {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.region__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.region__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.region__tag {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-tag-text);
+  background: var(--color-tag-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.region__body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-5);
+  min-height: 120px;
+  /* dashed guide communicates reserved-but-empty space for a future module */
+  background:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 10px,
+      rgba(31, 78, 121, 0.03) 10px,
+      rgba(31, 78, 121, 0.03) 20px
+    );
+}
+
+.region__note {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* Taller reserved regions for the workspace and report surfaces */
+.region--tall .region__body { min-height: 260px; }
+
+/* ------------------------- Secondary area (Archive) ------------------------- */
+.secondary {
+  padding: 0 var(--space-6) var(--space-6);
+}
+
+.secondary .region__body { min-height: 96px; }
+
+/* ------------------------- Responsive containers ------------------------- */
+/* Desktop-first; gracefully reflow so later modules integrate without redesign. */
+@media (max-width: 1100px) {
+  .workspace {
+    grid-template-columns: minmax(240px, 1fr) minmax(300px, 1.4fr);
+  }
+  .panel--right { grid-column: 1 / -1; }
+}
+
+@media (max-width: 760px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    padding: var(--space-4);
+    gap: var(--space-4);
+  }
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-4);
+  }
+  .secondary { padding: 0 var(--space-4) var(--space-4); }
+}
+
+/* =====================================================================
+   Operations Dashboard (Phase 4.1) — layout & KPI framework (placeholder)
+   ===================================================================== */
+
+/* Filled region body: replaces the centered dashed placeholder with a
+   left-aligned block that hosts the dashboard content. */
+.region__body--filled {
+  display: block;
+  min-height: 0;
+  padding: var(--space-4);
+  background: none;
+  text-align: left;
+}
+
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.dashboard__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.dashboard__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--color-text);
+}
+
+.dashboard__subtitle {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+
+.dashboard__phase-tag {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-tag-text);
+  background: var(--color-tag-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+.dashboard__section { display: flex; flex-direction: column; gap: var(--space-2); }
+
+.dashboard__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.dashboard__section-title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted);
+}
+
+.dashboard__section-tag {
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+
+/* KPI board — nine KPITiles, responsive wrap */
+.kpi-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-2);
+}
+
+.kpi-tile {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kpi-tile__title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.kpi-tile__value {
+  margin: 2px 0;
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.5px;
+}
+
+.kpi-tile__desc {
+  margin: 0;
+  font-size: 10.5px;
+  color: var(--color-text-muted);
+}
+
+/* Failure category cards — five placeholders, responsive wrap */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-2);
+}
+
+.category-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.category-card__icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-tag-bg);
+  border: 1px solid var(--color-border);
+}
+
+.category-card__title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--color-text);
+  line-height: 1.25;
+}
+
+.category-card__metric {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+/* =====================================================================
+   Phase 4.2 — active-screen outlet + interactive category selection
+   ===================================================================== */
+
+/* The single active-screen container; the active screen renders here. */
+.screen-outlet {
+  flex: 1 1 auto;
+  display: block;
+  padding: var(--space-5) var(--space-6);
+}
+
+/* Full-width dashboard (no longer confined to a narrow panel). */
+.screen-outlet .dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Widen the KPI and category grids now that the dashboard is full width. */
+.screen-outlet .kpi-board {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.screen-outlet .category-grid {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+/* Interactive category cards (selection affordance). */
+.category-card {
+  position: relative;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease, background 120ms ease;
+}
+.category-card:hover {
+  border-color: var(--color-header-accent);
+  box-shadow: 0 2px 10px rgba(15, 37, 64, 0.10);
+}
+.category-card:focus-visible {
+  outline: 2px solid var(--color-header-accent);
+  outline-offset: 2px;
+}
+
+/* Selected (active) category — visual + reflects aria-pressed="true". */
+.category-card--active {
+  border-color: var(--color-header-accent);
+  background: var(--color-tag-bg);
+  box-shadow: 0 0 0 1px var(--color-header-accent) inset;
+}
+.category-card--active .category-card__icon {
+  background: var(--color-header-accent);
+  border-color: var(--color-header-accent);
+}
+
+/* Selected indicator pill. */
+.category-card__selected {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  background: var(--color-header-accent);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+/* =====================================================================
+   Phase 5.1 — Investigation Queue (layout only; presentation styles)
+   ---------------------------------------------------------------------
+   Pure presentation for the Investigation Queue screen (FS-03 §5–§7.8):
+   header, summary strip, scrollable Investigation Table, empty state,
+   loading skeleton, and footer. No behaviour is implied by these rules.
+   The header row and data rows share one grid template so columns align.
+   ===================================================================== */
+
+/* Shared column template for the Investigation Table (10 columns). */
+:root {
+  --queue-grid:
+    minmax(90px, 0.9fr)   /* Case ID          */
+    minmax(140px, 1.4fr)  /* Merchant         */
+    minmax(96px, 1fr)     /* Gateway          */
+    minmax(84px, 0.9fr)   /* Network          */
+    minmax(150px, 1.4fr)  /* Failure Category */
+    minmax(96px, 0.9fr)   /* Priority         */
+    minmax(110px, 1fr)    /* Revenue at Risk  */
+    minmax(84px, 0.8fr)   /* Failed Txns      */
+    minmax(96px, 0.9fr)   /* Status           */
+    minmax(96px, 0.9fr);  /* Created          */
+}
+
+/* Screen container — vertical stack, full width in the outlet. */
+.queue {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+}
+
+/* ------------------------- Queue Header ------------------------- */
+.queue-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4) var(--space-5);
+}
+.queue-header__context { display: flex; align-items: flex-start; gap: var(--space-3); }
+.queue-back {
+  flex: none;
+  width: 32px; height: 32px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font-size: 16px;
+  cursor: not-allowed;
+}
+.queue-header__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted);
+}
+.queue-header__category { margin: 2px 0 4px; font-size: 18px; color: var(--color-text); }
+.queue-header__window { margin: 0; font-size: 12px; color: var(--color-text-muted); }
+
+.queue-header__controls { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
+.queue-search__input {
+  min-width: 200px;
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 13px;
+}
+.queue-control {
+  padding: 6px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 13px;
+  cursor: not-allowed;
+}
+
+/* ------------------------- Queue Summary ------------------------- */
+.queue-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-3);
+}
+.queue-summary__tile {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-3) var(--space-4);
+}
+.queue-summary__value { margin: 0; font-size: 22px; font-weight: 700; color: var(--color-text); }
+.queue-summary__label {
+  margin: 4px 0 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+/* ------------------------- Investigation Table ------------------------- */
+.queue-list {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.queue-table { display: flex; flex-direction: column; min-width: 0; }
+
+/* Rows are grids using the shared template; enables clean column alignment. */
+.queue-row {
+  display: grid;
+  grid-template-columns: var(--queue-grid);
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  min-width: 940px; /* keeps columns legible; container scrolls if narrower */
+}
+
+/* Sticky header row. */
+.queue-thead { position: sticky; top: 0; z-index: 1; background: var(--color-surface-muted); }
+.queue-row--head { border-bottom: 1px solid var(--color-border); }
+.queue-head-cell {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+
+/* Scrollable body — vertical scroll for long queues; horizontal if narrow. */
+.queue-scroll {
+  max-height: 420px;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+.queue-scroll .queue-row { border-bottom: 1px solid var(--color-border); }
+.queue-scroll .queue-row:last-child { border-bottom: none; }
+
+.queue-cell {
+  font-size: 13px;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.queue-cell--merchant, .queue-cell--category { color: var(--color-text); }
+
+/* Priority / Status placeholder pills. */
+.queue-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 2px 10px;
+  border: 1px solid var(--color-border);
+}
+.queue-pill--placeholder { color: var(--color-text-muted); background: var(--color-surface-muted); }
+
+/* ------------------------- Empty State ------------------------- */
+.queue-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-5);
+  min-height: 260px;
+}
+.queue-empty__glyph {
+  font-size: 34px;
+  line-height: 1;
+  color: var(--color-border);
+}
+.queue-empty__title { margin: var(--space-2) 0 0; font-size: 16px; color: var(--color-text); }
+.queue-empty__text { margin: 0; font-size: 13px; color: var(--color-text-muted); max-width: 360px; }
+
+/* ------------------------- Loading State ------------------------- */
+.queue-loading { padding: var(--space-5); }
+.queue-loading__label { margin: 0 0 var(--space-4); font-size: 13px; color: var(--color-text-muted); }
+.queue-skeleton { display: flex; flex-direction: column; gap: var(--space-3); }
+.queue-skeleton__row { height: 20px; }
+.queue-skeleton__bar {
+  display: block;
+  height: 100%;
+  border-radius: var(--radius);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface-muted) 0%,
+    #edf1f6 50%,
+    var(--color-surface-muted) 100%
+  );
+  background-size: 200% 100%;
+  animation: queue-skeleton-pulse 1.4s ease-in-out infinite;
+}
+@keyframes queue-skeleton-pulse {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .queue-skeleton__bar { animation: none; }
+}
+
+/* ------------------------- Queue Footer ------------------------- */
+.queue-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--color-text-muted);
+  padding: 0 var(--space-2);
+}
+
+/* =====================================================================
+   Phase 5.2 — Investigation Queue state integration (selection styles)
+   ---------------------------------------------------------------------
+   The queue is rendered as a region inside the Dashboard. These rules add
+   interactive/selected row affordances and priority/status pill tones.
+   Presentation only; no behaviour is implied here.
+   ===================================================================== */
+
+/* Queue embedded as a Dashboard region: the region provides the outer
+   spacing, so the queue block itself sheds its standalone padding. */
+.queue-region .queue { padding: 0; gap: var(--space-3); }
+
+/* Interactive (bound) rows are selectable. */
+.queue-row--interactive { cursor: pointer; transition: background 120ms ease; }
+.queue-row--interactive:hover { background: var(--color-surface-muted); }
+.queue-row--interactive:focus-visible {
+  outline: 2px solid var(--color-header-accent);
+  outline-offset: -2px;
+}
+
+/* The single selected row — visually obvious (accent bar + tinted bg). */
+.queue-row--selected {
+  background: var(--color-tag-bg);
+  box-shadow: inset 3px 0 0 0 var(--color-header-accent);
+}
+.queue-row--selected:hover { background: var(--color-tag-bg); }
+.queue-row--selected .queue-cell--id { font-weight: 700; color: var(--color-header-accent); }
+
+/* Priority / status pill tones. */
+.queue-pill--critical { color: #8a1c1c; background: #fbe9e9; border-color: #f0c9c9; }
+.queue-pill--high     { color: #8a5a00; background: #fdf1dd; border-color: #eedcae; }
+.queue-pill--normal   { color: #1f4e79; background: var(--color-tag-bg); border-color: #cfe0f2; }
+.queue-pill--status   { color: var(--color-text-muted); background: var(--color-surface-muted); }
+
+/* =====================================================================
+   Phase 5.3 — Case Preview panel (read-only presentation)
+   ---------------------------------------------------------------------
+   The Case Preview is a Dashboard region showing the current selectedCase
+   in professional sections. Presentation only; no behaviour implied.
+   ===================================================================== */
+
+.case-preview {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4) var(--space-5);
+}
+
+/* Header — identifies which case is in focus (clearly selected). */
+.case-preview__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.case-preview__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted);
+}
+.case-preview__id { margin: 2px 0 4px; font-size: 20px; color: var(--color-header-accent); }
+.case-preview__sub { margin: 0; font-size: 13px; color: var(--color-text-muted); }
+.case-preview__badge {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  background: var(--color-header-accent);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* Body — responsive grid of sections. */
+.case-preview__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-4);
+  padding-top: var(--space-4);
+}
+
+.case-section {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}
+.case-section__title {
+  margin: 0 0 var(--space-3);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-header-accent);
+}
+
+/* Field grid (definition list). */
+.case-field-grid { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.case-field {
+  display: grid;
+  grid-template-columns: 44% 56%;
+  gap: var(--space-3);
+  align-items: baseline;
+}
+.case-field__label { margin: 0; font-size: 12px; color: var(--color-text-muted); }
+.case-field__value {
+  margin: 0;
+  font-size: 13px;
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+/* Empty state (no case selected). */
+.case-preview--empty { display: flex; }
+.case-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-5);
+  min-height: 180px;
+}
+.case-empty__glyph { font-size: 32px; line-height: 1; color: var(--color-border); }
+.case-empty__title { margin: var(--space-2) 0 0; font-size: 16px; color: var(--color-text); }
+.case-empty__text { margin: 0; font-size: 13px; color: var(--color-text-muted); max-width: 340px; }
+
+/* =====================================================================
+   Phase 6.3 — Investigation Timeline panel (read-only presentation)
+   ---------------------------------------------------------------------
+   A Dashboard region beneath the Case Preview showing the current
+   investigation's deterministic lifecycle events. Presentation only;
+   reuses the existing surface/tokens and the case-preview design language.
+   ===================================================================== */
+
+.timeline-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4) var(--space-5);
+}
+
+/* Header — mirrors the Case Preview header language. */
+.timeline-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.timeline-panel__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted);
+}
+.timeline-panel__id { margin: 2px 0 0; font-size: 18px; color: var(--color-header-accent); }
+.timeline-panel__badge {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  background: var(--color-header-accent);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* Event list. */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-4) 0 0;
+  display: flex;
+  flex-direction: column;
+}
+.timeline-event { display: flex; gap: var(--space-3); align-items: stretch; }
+
+/* Marker column: a dot with a connecting line to the next event. */
+.timeline-event__marker {
+  position: relative;
+  flex: none;
+  width: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.timeline-event__dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 3px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px solid var(--color-header-accent);
+  flex: none;
+}
+.timeline-event__line {
+  flex: 1;
+  width: 2px;
+  background: var(--color-border);
+  margin: 2px 0;
+}
+
+/* Event body. */
+.timeline-event__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-bottom: var(--space-4);
+}
+.timeline-event:last-child .timeline-event__body { padding-bottom: 0; }
+.timeline-event__title { font-size: 13px; font-weight: 600; color: var(--color-text); }
+.timeline-event__detail { font-size: 12px; color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+/* Empty state — matches the Case Preview empty language. */
+.timeline-panel--empty { display: flex; }
+.timeline-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-5);
+  min-height: 160px;
+}
+.timeline-empty__glyph { font-size: 32px; line-height: 1; color: var(--color-border); }
+.timeline-empty__title { margin: var(--space-2) 0 0; font-size: 16px; color: var(--color-text); }
+.timeline-empty__text { margin: 0; font-size: 13px; color: var(--color-text-muted); max-width: 340px; }
+
+/* =====================================================================
+   Phase 6.4 — Investigation Evidence panel (read-only presentation)
+   ---------------------------------------------------------------------
+   A Dashboard region beneath the Investigation Timeline showing the
+   current investigation's deterministic supporting evidence (raw case
+   information). Presentation only; reuses the existing surface/tokens and
+   the Case Preview / Timeline design language.
+   ===================================================================== */
+
+.evidence-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4) var(--space-5);
+}
+
+/* Header — mirrors the Case Preview / Timeline header language. */
+.evidence-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.evidence-panel__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted);
+}
+.evidence-panel__id { margin: 2px 0 0; font-size: 18px; color: var(--color-header-accent); }
+.evidence-panel__badge {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  background: var(--color-header-accent);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* Evidence grid — label/value items (raw information, no analysis). */
+.evidence-grid {
+  margin: 0;
+  padding-top: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+.evidence-item {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}
+.evidence-item__label {
+  margin: 0 0 2px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.evidence-item__value { margin: 0; font-size: 13px; color: var(--color-text); overflow-wrap: anywhere; }
+
+/* Empty state — matches the Case Preview / Timeline empty language. */
+.evidence-panel--empty { display: flex; }
+.evidence-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-5);
+  min-height: 160px;
+}
+.evidence-empty__glyph { font-size: 32px; line-height: 1; color: var(--color-border); }
+.evidence-empty__title { margin: var(--space-2) 0 0; font-size: 16px; color: var(--color-text); }
+.evidence-empty__text { margin: 0; font-size: 13px; color: var(--color-text-muted); max-width: 340px; }
+
+/* =====================================================================
+   Phase 7.1 — Multi-Agent Investigation Workspace (read-only presentation)
+   ---------------------------------------------------------------------
+   A Dashboard region beneath the Investigation Evidence showing six
+   deterministic Agent Cards for the current investigation. Presentation
+   only; reuses the existing surface/tokens and the panel design language.
+   ===================================================================== */
+
+.workspace-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4) var(--space-5);
+}
+
+/* Header — mirrors the other panel headers. */
+.workspace-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.workspace-panel__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted);
+}
+.workspace-panel__id { margin: 2px 0 0; font-size: 18px; color: var(--color-header-accent); }
+.workspace-panel__badge {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  background: var(--color-header-accent);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* Agent grid — six reusable Agent Cards. */
+.agent-grid {
+  padding-top: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.agent-card {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.agent-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.agent-card__name { margin: 0; font-size: 13px; font-weight: 700; color: var(--color-text); }
+.agent-card__status {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.agent-card__status--completed { color: #1f5130; background: #e6f4ea; border: 1px solid #bfe3cb; }
+.agent-card__status--pending { color: var(--color-text-muted); background: var(--color-surface); border: 1px solid var(--color-border); }
+.agent-card__output { margin: 0; font-size: 13px; color: var(--color-text); }
+.agent-card__updated { margin: 0; font-size: 11px; color: var(--color-text-muted); }
+
+/* Empty state — matches the other panels' empty language. */
+.workspace-panel--empty { display: flex; }
+.workspace-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-5);
+  min-height: 160px;
+}
+.workspace-empty__glyph { font-size: 32px; line-height: 1; color: var(--color-border); }
+.workspace-empty__title { margin: var(--space-2) 0 0; font-size: 16px; color: var(--color-text); }
+.workspace-empty__text { margin: 0; font-size: 13px; color: var(--color-text-muted); max-width: 340px; }
+
+/* Phase 8.1 — additive status tone for the transient "Running" execution
+   state (new state only; existing pill/status rules are unchanged). */
+.agent-card__status--running { color: #1f4e79; background: var(--color-tag-bg); border: 1px solid #cfe0f2; }
+
+/* =====================================================================
+   Phase 9.1 — Executive Investigation Report (read-only presentation)
+   ---------------------------------------------------------------------
+   A Dashboard region beneath the Multi-Agent Workspace consolidating the
+   current investigation for leadership. Compact and scannable; reuses the
+   existing surface/tokens and the shared panel design language.
+   ===================================================================== */
+
+.report-panel {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4) var(--space-5);
+}
+
+/* Header — mirrors the other panel headers. */
+.report-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.report-panel__eyebrow {
+  margin: 0;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--color-text-muted);
+}
+.report-panel__id { margin: 2px 0 4px; font-size: 20px; color: var(--color-header-accent); }
+.report-panel__sub { margin: 0; font-size: 13px; color: var(--color-text-muted); }
+.report-panel__badge {
+  flex: none;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  background: var(--color-header-accent);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* Body — responsive grid of compact sections. */
+.report-panel__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+}
+.report-section {
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: var(--space-3) var(--space-4);
+}
+.report-section--wide { grid-column: 1 / -1; }
+.report-section__title {
+  margin: 0 0 var(--space-2);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-header-accent);
+}
+
+/* Compact label/value grid. */
+.report-grid { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.report-field { display: grid; grid-template-columns: 45% 55%; gap: var(--space-2); align-items: baseline; }
+.report-field__label { margin: 0; font-size: 12px; color: var(--color-text-muted); }
+.report-field__value { margin: 0; font-size: 13px; color: var(--color-text); overflow-wrap: anywhere; }
+
+/* One-line assembled summary (no paragraphs). */
+.report-summary { margin: 0; font-size: 13px; color: var(--color-text); line-height: 1.45; }
+
+/* Compact key/value lists (timeline + evidence). */
+.report-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.report-line { display: flex; justify-content: space-between; gap: var(--space-3); font-size: 12.5px; }
+.report-line__k { color: var(--color-text-muted); }
+.report-line__v { color: var(--color-text); text-align: right; overflow-wrap: anywhere; }
+
+/* Agent activity — compact rows (name · status · message). */
+.report-agents { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.report-agent {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.9fr) 90px minmax(0, 2fr);
+  gap: var(--space-3);
+  align-items: baseline;
+  font-size: 12.5px;
+}
+.report-agent__name { font-weight: 600; color: var(--color-text); }
+.report-agent__status {
+  justify-self: start;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #1f5130;
+  background: #e6f4ea;
+  border: 1px solid #bfe3cb;
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.report-agent__message { color: var(--color-text-muted); overflow-wrap: anywhere; }
+
+/* Empty state — matches the other panels' empty language. */
+.report-panel--empty { display: flex; }
+.report-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-5);
+  min-height: 160px;
+}
+.report-empty__glyph { font-size: 32px; line-height: 1; color: var(--color-border); }
+.report-empty__title { margin: var(--space-2) 0 0; font-size: 16px; color: var(--color-text); }
+.report-empty__text { margin: 0; font-size: 13px; color: var(--color-text-muted); max-width: 340px; }
+
+/* =====================================================================
+   Phase 9.2 — Investigation Workspace screen (navigation)
+   ---------------------------------------------------------------------
+   The Investigation screen reuses the same section rhythm as the
+   Dashboard; only the Back-to-Queue bar is new. Additive; existing rules
+   are unchanged.
+   ===================================================================== */
+
+.investigation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* Back-to-Queue bar. */
+.investigation__bar { display: flex; align-items: center; }
+.investigation__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-header-accent);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+.investigation__back:hover {
+  border-color: var(--color-header-accent);
+  background: var(--color-surface-muted);
+}
+.investigation__back:focus-visible {
+  outline: 2px solid var(--color-header-accent);
+  outline-offset: 2px;
+}
+
+/* =====================================================================
+   Phase 10.1 — Generic agent analysis block (reasoning output)
+   ---------------------------------------------------------------------
+   Rendered by AgentCard for ANY agent that provides an `analysis`
+   structure. Agents without it are unaffected. Additive; existing rules
+   unchanged.
+   ===================================================================== */
+
+.agent-analysis {
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px dashed var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.agent-analysis__facts { margin: 0; display: flex; flex-direction: column; gap: 4px; }
+.agent-analysis__row { display: flex; align-items: baseline; gap: var(--space-2); }
+.agent-analysis__label {
+  margin: 0;
+  min-width: 74px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.agent-analysis__value { margin: 0; font-size: 12.5px; font-weight: 600; color: var(--color-text); }
+.agent-analysis__confidence {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 999px;
+  padding: 1px 8px;
+  border: 1px solid var(--color-border);
+}
+.agent-analysis__confidence--high { color: #1f5130; background: #e6f4ea; border-color: #bfe3cb; }
+.agent-analysis__confidence--medium { color: #8a5a00; background: #fdf1dd; border-color: #eedcae; }
+.agent-analysis__confidence--low { color: var(--color-text-muted); background: var(--color-surface-muted); }
+.agent-analysis__heading {
+  margin: 2px 0 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-text-muted);
+}
+.agent-analysis__evidence { margin: 0; padding-left: 16px; display: flex; flex-direction: column; gap: 2px; }
+.agent-analysis__evidence-item { font-size: 12px; color: var(--color-text); }
+.agent-analysis__reasoning { margin: 2px 0 0; font-size: 12.5px; color: var(--color-text); line-height: 1.4; }

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+  =====================================================================
+  PayResolve AI — preview.html  (LOCAL PREVIEW / VIEWING AID ONLY)
+  ---------------------------------------------------------------------
+  Why this file exists:
+    The real application (index.html) is a modular ES-module app. Browsers
+    BLOCK ES modules when a page is opened by double-click (the file://
+    protocol), so index.html shows a blank content area unless it is
+    served over http://. This standalone page uses a single CLASSIC
+    (non-module) script so you can just DOUBLE-CLICK it and see the
+    Operations Dashboard, with "Authentication Failure (3DS)" selected on
+    startup and working category selection.
+
+  Important:
+    - This is a VIEWING AID that mirrors the approved modular app's
+      behaviour. It is NOT the application architecture.
+    - The canonical, approved implementation is unchanged in src/ and
+      index.html (State Manager owns state; ScreenOutlet renders the
+      Dashboard; the Dashboard is a pure presentation module). To run the
+      real app, serve the folder over http:// (see the note at the bottom).
+    - It reuses the real stylesheet (assets/css/styles.css), which loads
+      fine over file://.
+  =====================================================================
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PayResolve AI — Preview</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <div id="app-root">
+      <header id="app-header" class="app-header">
+        <div class="app-header__brand">
+          <span class="app-header__logo" aria-hidden="true">PR</span>
+          <div class="app-header__titles">
+            <h1 class="app-header__title">PayResolve AI</h1>
+            <p class="app-header__subtitle">Agentic Payment Operations Investigation Platform</p>
+          </div>
+        </div>
+        <div class="app-header__meta">Internal Operations Tool — Local Preview</div>
+      </header>
+      <main id="screen-outlet" class="screen-outlet" aria-live="polite"></main>
+    </div>
+
+    <!--
+      Classic (non-module) script. It mirrors the behaviour of the modular
+      source: a single state store (owns selectedCategory), a pure Dashboard
+      render, startup initialization of the default category, subscription
+      re-render, and category selection via event delegation.
+    -->
+    <script>
+      (function () {
+        "use strict";
+
+        // ---- domain constants (PRD §13) ----
+        var FAILURE_CATEGORIES = [
+          "Authentication Failure (3DS)",
+          "Insufficient Funds",
+          "Expired Card",
+          "Do Not Honor",
+          "Issuer Unavailable"
+        ];
+        var DEFAULT_SELECTED_CATEGORY = FAILURE_CATEGORIES[0];
+
+        // ---- the nine FS-02 §4 KPIs (placeholders only) ----
+        var KPI_DEFINITIONS = [
+          { title: "Authorization Rate", description: "Share of attempts authorized" },
+          { title: "Approval Rate", description: "Share of attempts approved" },
+          { title: "Decline Rate", description: "Share of attempts declined" },
+          { title: "Revenue at Risk", description: "Exposed revenue in the window" },
+          { title: "Open Investigations", description: "Investigations currently open" },
+          { title: "Critical Investigations", description: "Open, highest-urgency investigations" },
+          { title: "Average Resolution Time", description: "Mean time to a closed case" },
+          { title: "Recovered Revenue", description: "Revenue recovered from actions" },
+          { title: "Merchant Health Score", description: "Overall merchant health indicator" }
+        ];
+
+        // ---- single source of truth (mirrors ApplicationStateManager) ----
+        var state = { selectedCategory: null };
+        var subscribers = [];
+        function getState() { return { selectedCategory: state.selectedCategory }; }
+        function notify() { var s = getState(); subscribers.forEach(function (fn) { fn(s); }); }
+        function subscribe(fn) { subscribers.push(fn); return function () {
+          subscribers = subscribers.filter(function (f) { return f !== fn; }); }; }
+        function initialize() { state.selectedCategory = DEFAULT_SELECTED_CATEGORY; notify(); }
+        function setSelectedCategory(category) { state.selectedCategory = category; notify(); }
+
+        // ---- pure render (mirrors DashboardScreen/PaymentHealthPanel/tiles) ----
+        function kpiTile(d) {
+          return '<article class="kpi-tile" data-kpi-tile>' +
+            '<p class="kpi-tile__title">' + d.title + '</p>' +
+            '<p class="kpi-tile__value">--</p>' +
+            '<p class="kpi-tile__desc">' + d.description + '</p></article>';
+        }
+        function categoryCard(name, isSelected) {
+          var cls = "category-card" + (isSelected ? " category-card--active" : "");
+          var ind = isSelected ? '<span class="category-card__selected">Selected</span>' : "";
+          return '<article class="' + cls + '" data-category="' + name + '" role="button" tabindex="0" aria-pressed="' + isSelected + '">' +
+            '<span class="category-card__icon" aria-hidden="true"></span>' +
+            '<h4 class="category-card__title">' + name + '</h4>' +
+            '<p class="category-card__metric">--</p>' + ind + '</article>';
+        }
+        function dashboard(snapshot) {
+          var selected = snapshot ? snapshot.selectedCategory : null;
+          var tiles = KPI_DEFINITIONS.map(kpiTile).join("");
+          var cards = FAILURE_CATEGORIES.map(function (n) { return categoryCard(n, n === selected); }).join("");
+          return '<div class="dashboard" data-screen="operations-dashboard" data-selected-category="' + (selected || "") + '">' +
+            '<header class="dashboard__header"><div>' +
+            '<h3 class="dashboard__title">Operations Dashboard</h3>' +
+            '<p class="dashboard__subtitle">Payment authorization health &amp; triage</p></div>' +
+            '<span class="dashboard__phase-tag">Live</span></header>' +
+            '<section class="dashboard__section kpi-summary" aria-label="Operational KPIs">' +
+            '<div class="dashboard__section-head"><h3 class="dashboard__section-title">Operational KPIs</h3>' +
+            '<span class="dashboard__section-tag">Placeholder</span></div>' +
+            '<div class="kpi-board">' + tiles + '</div></section>' +
+            '<section class="dashboard__section category-container" aria-label="Failure categories">' +
+            '<div class="dashboard__section-head"><h3 class="dashboard__section-title">Failure Categories</h3>' +
+            '<span class="dashboard__section-tag">Select a category</span></div>' +
+            '<div class="category-grid" role="group">' + cards + '</div></section></div>';
+        }
+
+        // ---- mount (subscribe + delegation), mirrors mountDashboard ----
+        function mount(outletEl) {
+          function render(s) { outletEl.innerHTML = dashboard(s); }
+          function request(category) {
+            if (category == null || category === getState().selectedCategory) return; // no effect if same
+            setSelectedCategory(category);
+          }
+          function onActivate(e) {
+            var card = e.target.closest("[data-category]");
+            if (!card) return;
+            request(card.getAttribute("data-category"));
+          }
+          function onKey(e) {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            var card = e.target.closest("[data-category]");
+            if (!card) return;
+            e.preventDefault();
+            request(card.getAttribute("data-category"));
+          }
+          outletEl.addEventListener("click", onActivate);
+          outletEl.addEventListener("keydown", onKey);
+          subscribe(render);
+          render(getState());
+        }
+
+        // ---- startup: State Manager initializes default, THEN mount ----
+        function boot() {
+          var outletEl = document.getElementById("screen-outlet");
+          if (!outletEl) return;
+          initialize();          // selectedCategory = "Authentication Failure (3DS)"
+          mount(outletEl);       // dashboard renders it as selected
+        }
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", boot, { once: true });
+        } else { boot(); }
+      })();
+    </script>
+    <!--
+      To run the REAL modular app (index.html) instead of this preview,
+      serve the PayResolveAI folder over http, e.g. from a terminal in that
+      folder:  python3 -m http.server 8000   then open  http://localhost:8000
+    -->
+  </body>
+</html>

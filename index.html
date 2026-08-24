@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--
+  =====================================================================
+  PayResolve AI — index.html
+  Phase 4.2 — Application Shell (pure shell; single active-screen outlet)
+  ---------------------------------------------------------------------
+  Purpose:
+    The pure Application Shell host page. It provides the application
+    header and a SINGLE active-screen container (#screen-outlet). It
+    contains NO screen markup of its own: the active screen (the
+    Operations Dashboard for this phase) is rendered into the outlet by
+    DashboardScreen() via the ScreenOutlet — there is no duplicated
+    static dashboard here.
+
+  Structure (FS-01 §3):
+    AppShell (host)
+      -> Application Header
+      -> #screen-outlet  (ScreenOutlet renders exactly one active screen)
+
+  Referenced documentation:
+    PRD §20 (desktop-first; Chrome/Edge/Safari); FS-01 §3.1 (AppShell,
+    ScreenOutlet), §4.6 (one active screen); Implementation Blueprint
+    v1.1 §2, §3.1, §7.
+
+  NOTE: Runs when served over http(s); ES module scripts do not load over
+  the file:// protocol.
+  =====================================================================
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PayResolve AI</title>
+    <link rel="stylesheet" href="assets/css/styles.css" />
+  </head>
+  <body>
+    <!-- Root application container (AppShell mount) -->
+    <div id="app-root">
+
+      <!-- ================= Application Header ================= -->
+      <header id="app-header" class="app-header">
+        <div class="app-header__brand">
+          <span class="app-header__logo" aria-hidden="true">PR</span>
+          <div class="app-header__titles">
+            <h1 class="app-header__title">PayResolve AI</h1>
+            <p class="app-header__subtitle">
+              Agentic Payment Operations Investigation Platform
+            </p>
+          </div>
+        </div>
+        <div class="app-header__meta">Internal Operations Tool</div>
+      </header>
+
+      <!-- ============ Active-screen outlet (ScreenOutlet) ============ -->
+      <!-- Exactly one active screen renders here; empty until the shell
+           mounts the Operations Dashboard. No static screen markup. -->
+      <main id="screen-outlet" class="screen-outlet" aria-live="polite"></main>
+
+    </div>
+
+    <!-- Application entry point -->
+    <script type="module" src="assets/js/main.js"></script>
+  </body>
+</html>
