@@ -1,5 +1,4 @@
 PayResolve AI
-
 Agentic AI-Powered Payment Operations Investigation Platform
 
 Live Demo
@@ -19,7 +18,7 @@ AI-Powered Analysis - Use specialized AI agents to classify failures and identif
 evidence-based Findings - Provide supporting evidence behind investigation conclusions.
 Revenue Impact Analysis - Assess the potential business impact of payment authorization failures.
 Recovery Recommendations - Generate actionable recommendations based on investigation findings.
-human-in-the-loop Review - Allow analysts to review, approve, override, or escalate AIgenerated findings.
+human-in-the-loop Review - Allow analysts to review, approve, override, or escalate AI-generated findings.
 Auditability - Maintain traceable investigation findings, evidence, recommendations, and decisions.
 
 
@@ -33,7 +32,7 @@ PayResolve AI uses a structured, multi-agent investigation approach rather than 
 The product follows a human-in-the-loop model: AI supports investigation and reasoning, while the analyst remains responsible for reviewing and making the final decision.
 
 Product Work
-The project was developed as a selfdirected product portfolio project to demonstrate product thinking and hands-on product development across AI and Payments.
+The project was developed as a self-directed product portfolio project to demonstrate product thinking and hands-on product development across AI and Payments.
 
 Product artifacts include:
 Product Requirements Document (PRD)
@@ -54,5 +53,5 @@ Product Design: Figma
 Version Control: Git / GitHub
 
 Project Status
-PayResolve AI is a selfdirected portfolio project and product prototype. It is designed to demonstrate product thinking and handson product development in the AI and Payments domains.
+PayResolve AI is a self-directed portfolio project and product prototype. It is designed to demonstrate product thinking and hands-on product development in the AI and Payments domains.
 It is not intended to represent a production payment processing or fraud prevention system.
