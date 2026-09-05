@@ -11,7 +11,7 @@ The platform transforms manual payment investigation into a structured workflow 
 
 
 
- Key Capabilities
+Key Capabilities
 Investigation Queue - Prioritize payment investigation cases based on business impact and urgency.
 Transaction Investigation - Group related failed transactions into structured investigation cases.
 AI-Powered Analysis - Use specialized AI agents to classify failures and identify likely root causes.
@@ -23,25 +23,8 @@ Auditability - Maintain traceable investigation findings, evidence, recommendati
 
 
 
-How It Works
-
-Investigation Queue
-        ↓
-Investigation Case
-        ↓
-AI-Powered Investigation
-        ↓
-Classification & Root Cause
-        ↓
-Evidence & Revenue Impact
-        ↓
-Recovery Recommendations
-        ↓
-Human Review
-        ↓
-Approve / Override / Escalate
-        ↓
-Resolution
+How It Works?
+Investigation Queue -> Investigation Case -> AI-Powered Investigation -> Classification & Root Cause -> Evidence & Revenue Impact -> Recovery Recommendations -> Human Review -> Approve / Override / Escalate -> Resolution
 
 
 Why Agentic AI?
