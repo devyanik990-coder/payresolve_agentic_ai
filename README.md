@@ -1,5 +1,4 @@
-PayResolve AI
-
+PayResolve AI\
 Agentic AI-Powered Payment Operations Investigation Platform
 
 
@@ -17,9 +16,13 @@ The platform transforms manual payment investigation into a structured workflow 
 Key Capabilities:
 
 Investigation Queue - Prioritize payment investigation cases based on business impact and urgency.
+
 Transaction Investigation - Group related failed transactions into structured investigation cases.
+
 AI-Powered Analysis - Use specialized AI agents to classify failures and identify likely root causes.
-evidence-based Findings - Provide supporting evidence behind investigation conclusions.
+
+Eidence-based Findings - Provide supporting evidence behind investigation conclusions.
+
 Revenue Impact Analysis - Assess the potential business impact of payment authorization failures.
 Recovery Recommendations - Generate actionable recommendations based on investigation findings.
 human-in-the-loop Review - Allow analysts to review, approve, override, or escalate AI-generated findings.
