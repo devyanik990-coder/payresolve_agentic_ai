@@ -26,7 +26,7 @@ PayResolve AI uses a structured, multi-agent investigation approach rather than 
 The product follows a human-in-the-loop model: AI supports investigation and reasoning, while the analyst remains responsible for reviewing and making the final decision.
 
 Product Work:\
-The project was developed as a self-directed product portfolio project to demonstrate product thinking and hands-on product development across AI and Payments.\
+The project was developed as a self-directed product portfolio project to demonstrate product thinking and hands-on product development across AI and Payments.
 
 Product artifacts include:\
 Product Requirements Document (PRD)\
@@ -37,14 +37,14 @@ Product workflows and scope\
 Figma product designs\
 User stories and acceptance criteria\
 Success metrics\
-Structured investigation datasets\
+Structured investigation datasets
 
 Technology:\
 Development: JavaScript\
 Data: JSON\
 AI / LLMs: Claude, ChatGPT\
 Product Design: Figma\
-Version Control: Git / GitHub\
+Version Control: Git / GitHub
 
 Project Status:\
 PayResolve AI is a self-directed portfolio project and product prototype. It is designed to demonstrate product thinking and hands-on product development in the AI and Payments domains.
